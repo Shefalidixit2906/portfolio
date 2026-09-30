@@ -1,0 +1,25 @@
+<svg viewBox="0 0 480 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workassist requirements and UX delivery cover graphic">
+  <defs>
+    <pattern id="grid-projectplaceholder4" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0 H0 V28" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.045"/>
+    </pattern>
+  </defs>
+  <rect width="480" height="270" fill="#0F2340"/>
+  <rect width="480" height="270" fill="url(#grid-projectplaceholder4)"/>
+  <rect x="0" y="0" width="480" height="5" fill="#A9812F"/>
+  <text x="32" y="34" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="2.5" fill="#C9A24F">PORTFOLIO PREVIEW</text>
+  <circle cx="240" cy="108" r="44" fill="#16304F" stroke="#A9812F" stroke-width="2"/>
+  <g transform="translate(240,108) scale(2.6) translate(-12,-12)" fill="none" stroke="#C9A24F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 4.5 h18 v15 a1 1 0 0 1 -1 1 h-16 a1 1 0 0 1 -1 -1 Z"/>
+      <path d="M3 9 h18"/>
+      <path d="M6.5 12 h6.5 v5 h-6.5 Z"/>
+      <path d="M15.5 12 h2.5"/>
+      <path d="M15.5 15 h2.5"/>
+    </g>
+  <text x="240" y="178" text-anchor="middle" font-family="Georgia, 'Source Serif 4', serif" font-size="21" font-weight="700" fill="#FFFFFF">
+  <tspan x="240" dy="0">Workassist — Requirement</tspan>
+  <tspan x="240" dy="27">&amp; UX Delivery</tspan>
+  </text>
+  <line x1="200" y1="215" x2="280" y2="215" stroke="#A9812F" stroke-width="2"/>
+  <text x="240" y="239" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#9FB0C4">Screenshot / live demo coming soon</text>
+</svg>
