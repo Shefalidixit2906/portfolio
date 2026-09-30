@@ -77,14 +77,14 @@
 
 window.PORTFOLIO_PROJECTS = [
   {
-    image: "assets/project/vendor-collection/screen-1.png",
+    image: "Vendor Collection & Payment Management System/assets/image/screen-1.png",
     imageAlt: "Outstanding Dashboard showing total outstanding, dealers with dues, ageing breakdown, and outstanding trend",
     images: [
-      "assets/project/vendor-collection/screen-1.png",
-      "assets/project/vendor-collection/screen-2.png",
-      "assets/project/vendor-collection/screen-3.png"
+      "Vendor Collection & Payment Management System/assets/image/screen-1.png",
+      "Vendor Collection & Payment Management System/assets/image/screen-2.png",
+      "Vendor Collection & Payment Management System/assets/image/screen-3.png"
     ],
-    video: "assets/project/vendor-collection/demo.mp4",
+    video: "Vendor Collection & Payment Management System/assets/Vedio/demo.mp4",
     title: "Vendor Collection & Payment Management System",
     description: "Centralized system automating payment tracking, collection status, and balance reconciliation, with role-based dashboards and automated reminders — cut manual data processing by 60%.",
     tags: ["Google Apps Script", "Google Sheets", "JavaScript"],
