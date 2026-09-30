@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revise Planned Task</title>
+
+    <!-- Material Design Web Components -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
+    
+    <!-- Material Design Components Web -->
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    
+    <!-- Date picker -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+        integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --mdc-theme-primary: #1976d2;
+            --mdc-theme-secondary: #424242;
+            --mdc-theme-background: #ffffff;
+            --mdc-theme-surface: #ffffff;
+            --mdc-theme-error: #b00020;
+            --mdc-theme-on-primary: #ffffff;
+            --mdc-theme-on-secondary: #ffffff;
+            --mdc-theme-on-surface: #212121;
+            --mdc-theme-on-error: #ffffff;
+            --mdc-typography-font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            font-family: var(--mdc-typography-font-family);
+            background-color: #f5f5f5;
+            color: var(--mdc-theme-on-surface);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .mdc-card {
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .app-card__content {
+            padding: 24px;
+        }
+
+        .form-field {
+            margin-bottom: 24px;
+        }
+
+        .mdc-text-field {
+            width: 100%;
+        }
+
+        /* Datepicker Material Design styling */
+        .datepicker {
+            font-family: var(--mdc-typography-font-family);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .datepicker table {
+            width: 100%;
+        }
+        .datepicker .day {
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 14px;
+        }
+        .datepicker .day.active {
+            background-color: var(--mdc-theme-primary);
+            color: var(--mdc-theme-on-primary);
+        }
+        .datepicker .day:hover {
+            background-color: rgba(25, 118, 210, 0.1);
+        }
+        
+        @media (max-width: 600px) {
+            .app-card__content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body class="mdc-typography">
+    <div class="mdc-card">
+        <div class="mdc-card__content app-card__content">
+            <h2 class="mdc-typography--headline6" style="margin-top: 0; margin-bottom: 24px; text-align: center;">Revise Planned Task</h2>
+            
+            <div class="form-field">
+                <div class="mdc-text-field mdc-text-field--filled" id="task-id-field">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label mdc-floating-label--float-above" id="task-id-label">Task ID</span>
+                    <input type="text" id="id" class="mdc-text-field__input" aria-labelledby="task-id-label" readonly>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <div class="mdc-text-field mdc-text-field--filled" id="name-field">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label mdc-floating-label--float-above" id="name-label">Name</span>
+                    <input type="text" id="name" class="mdc-text-field__input" aria-labelledby="name-label" readonly>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <div class="mdc-text-field mdc-text-field--filled" id="task-field">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label mdc-floating-label--float-above" id="task-label">Task</span>
+                    <input type="text" id="task" class="mdc-text-field__input" aria-labelledby="task-label" readonly>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <div class="mdc-text-field mdc-text-field--filled" id="date-field">
+                    <span class="mdc-text-field__ripple"></span>
+                    <span class="mdc-floating-label" id="planned-date-label">Planned Date</span>
+                    <input type="text" id="planned_date" class="mdc-text-field__input datepicker-input" 
+                           aria-labelledby="planned-date-label" required
+                           data-provide="datepicker" 
+                           data-date-start-date="-0d"
+                           data-date-today-highlight="true" 
+                           data-date-format="dd/mm/yyyy" 
+                           data-date-autoclose="true">
+                    <i class="material-icons mdc-text-field__icon mdc-text-field__icon--trailing" tabindex="0" role="button">calendar_today</i>
+                    <span class="mdc-line-ripple"></span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 32px;">
+                <button id="revise-task-button" class="mdc-button mdc-button--raised" style="width: 100%;">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="mdc-button__label">Revise Task Plan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Snackbar -->
+    <div id="success-message" class="mdc-snackbar">
+        <div class="mdc-snackbar__surface" role="status" aria-relevant="additions">
+            <div class="mdc-snackbar__label" aria-atomic="false">
+                Task Successfully Revised!
+            </div>
+            <div class="mdc-snackbar__actions" aria-atomic="true">
+                <button type="button" class="mdc-button mdc-snackbar__action">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">OK</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Required JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+        integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Material Components
+            mdc.autoInit();
+            
+            // Initialize the datepicker with Material Design styling
+            $('.datepicker-input').datepicker().on('show', function() {
+                // Add Material Design classes to the datepicker
+                setTimeout(function() {
+                    $('.datepicker').addClass('mdc-menu-surface mdc-menu-surface--open');
+                    $('.datepicker-days th.dow').addClass('mdc-typography--subtitle2');
+                    $('.datepicker .day').addClass('mdc-ripple-surface');
+                    $('.datepicker .day.active').addClass('mdc-theme--primary-bg mdc-theme--on-primary');
+                }, 0);
+            });
+            
+            // Add click handler for the trailing calendar icon
+            document.querySelector('.mdc-text-field__icon--trailing').addEventListener('click', function() {
+                $('#planned_date').datepicker('show');
+            });
+            
+            // Handle revise button click
+            document.getElementById('revise-task-button').addEventListener('click', function() {
+                const taskId = document.getElementById('id').value;
+                const plannedDate = document.getElementById('planned_date').value;
+                
+                if (!plannedDate) {
+                    alert('Please select a planned date');
+                    return;
+                }
+                
+                loadingStart();
+                
+                google.script.run
+                    .withSuccessHandler(function() {
+                        loadingEnd();
+                        
+                        // Show success message
+                        const snackbar = new mdc.snackbar.MDCSnackbar(document.getElementById('success-message'));
+                        snackbar.open();
+                        
+                        // Wait a moment and then go back to follow up
+                        setTimeout(function() {
+                            loadFView();
+                        }, 2000);
+                    })
+                    .withFailureHandler(function(error) {
+                        loadingEnd();
+                        console.error(error);
+                        alert('Error: ' + error.message);
+                    })
+                    .addNext({
+                        id: taskId,
+                        pl: plannedDate
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

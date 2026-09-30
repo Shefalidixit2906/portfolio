@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Outstanding Dashboard</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1: #2a78d6; /* blue    */
+    --series-2: #eb6834; /* orange  */
+    --series-3: #1baf7a; /* aqua    */
+    --series-4: #eda100; /* yellow  */
+    --series-5: #e87ba4; /* magenta */
+    --series-6: #008300; /* green   */
+    --series-7: #4a3aa7; /* violet  */
+    --series-8: #e34948; /* red     */
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:     #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+      --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
+      --series-7: #9085e9; --series-8: #e66767;
+      --status-good:     #0ca30c;
+      --status-warning:  #fab219;
+      --status-serious:  #ec835a;
+      --status-critical: #d03b3b;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+    --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
+    --series-7: #9085e9; --series-8: #e66767;
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #d03b3b;
+  }
+
+  .viz-root * { box-sizing: border-box; }
+  .viz-root {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page-plane);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 18px 20px 40px;
+  }
+  .viz-root h1, .viz-root h2, .viz-root h3 { font-weight: 600; margin: 0; }
+  .viz-root .muted { color: var(--text-muted); }
+  .viz-root .secondary { color: var(--text-secondary); }
+
+  .db-header {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px;
+    margin-bottom: 4px;
+  }
+  .db-header h1 { font-size: 19px; }
+  .db-sub { font-size: 12px; color: var(--text-muted); }
+  .db-toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin: 14px 0 20px;
+  }
+  .db-toolbar input, .db-toolbar select {
+    font-size: 13px; padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary); font-family: inherit;
+  }
+  .db-toolbar input { min-width: 180px; }
+  .btn {
+    font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary); cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: var(--gridline); }
+  .btn.primary { background: var(--series-1); color: #fff; border-color: transparent; }
+  .btn.primary:hover { opacity: 0.9; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-secondary); cursor: pointer; user-select: none;
+  }
+  .chip.on { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px; margin-bottom: 18px;
+  }
+  .kpi-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .kpi-label { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--text-muted); text-transform: uppercase; }
+  .kpi-value { font-size: 26px; font-weight: 700; margin-top: 6px; line-height: 1.1; }
+  .kpi-value.hero { font-size: 32px; }
+  .kpi-foot { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .kpi-tile.critical .kpi-value { color: var(--status-critical); }
+
+  .card-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 12px; margin-bottom: 18px; align-items: start;
+  }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; overflow: hidden;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 8px; }
+  .card-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .02em; color: var(--text-secondary); }
+  .link-btn { font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: inherit; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 12px; color: var(--text-secondary); margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+  .hbar-row { display: grid; grid-template-columns: 96px 1fr 92px; align-items: center; gap: 10px; margin: 9px 0; font-size: 12px; }
+  .hbar-row .hbar-label { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbar-track { position: relative; height: 20px; background: var(--gridline); border-radius: 5px; overflow: hidden; }
+  .hbar-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 4px; }
+  .hbar-value { text-align: right; color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .ageing-bar-row { display: flex; height: 34px; border-radius: 6px; overflow: hidden; gap: 2px; }
+  .ageing-seg { flex: none; height: 100%; }
+  .mini-bar { display: flex; height: 8px; width: 100%; border-radius: 3px; overflow: hidden; gap: 1px; min-width: 60px; }
+  .mini-seg { height: 100%; }
+
+  table.dtable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.dtable th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; color: var(--text-muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--gridline); position: sticky; top: 0; background: var(--surface-1); cursor: pointer; white-space: nowrap; }
+  table.dtable td { padding: 7px 10px; border-bottom: 1px solid var(--gridline); vertical-align: middle; }
+  table.dtable tbody tr:hover { background: var(--page-plane); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .table-scroll { overflow-x: auto; max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .status-pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--gridline); color: var(--text-secondary); white-space: nowrap; }
+  .status-pill.empty { color: var(--text-muted); font-style: italic; }
+
+  .tt {
+    position: fixed; z-index: 50; pointer-events: none; font-size: 12px;
+    background: var(--text-primary); color: var(--surface-1); padding: 7px 10px;
+    border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.18); max-width: 220px;
+    opacity: 0; transition: opacity .08s linear; line-height: 1.4;
+  }
+  .tt.show { opacity: 1; }
+  .tt b { font-variant-numeric: tabular-nums; }
+
+  .load { padding: 60px 0; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .spin { width: 22px; height: 22px; border: 3px solid var(--gridline); border-top-color: var(--series-1); border-radius: 50%; animation: sp .8s linear infinite; margin: 0 auto 10px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  .demo-flag { font-size: 11px; color: var(--text-muted); background: var(--gridline); padding: 3px 9px; border-radius: 999px; }
+
+  @media (max-width: 480px) {
+    .hbar-row { grid-template-columns: 70px 1fr 70px; }
+    .db-header h1 { font-size: 16px; }
+  }
+</style>
+
+<div class="viz-root" id="app">
+  <div id="loadDiv" class="load"><div class="spin"></div>Loading outstanding data…</div>
+
+  <div id="body" style="display:none">
+    <div class="db-header">
+      <h1>Outstanding Dashboard</h1>
+      <span class="db-sub">Nathji Agencies Pvt. Ltd.</span>
+      <span id="demoFlag" class="demo-flag" style="display:none">Preview — sample data</span>
+      <span id="genAt" class="db-sub" style="margin-left:auto"></span>
+    </div>
+
+    <div class="db-toolbar">
+      <input id="searchBox" type="text" placeholder="Search dealer…">
+      <select id="execFilter"><option value="">All executives</option></select>
+      <select id="cityFilter"><option value="">All cities</option></select>
+      <div class="chip-row" id="bucketChips">
+        <span class="chip on" data-bucket="">All ageing</span>
+        <span class="chip" data-bucket="b0_30">0–30d</span>
+        <span class="chip" data-bucket="b31_60">31–60d</span>
+        <span class="chip" data-bucket="b61_90">61–90d</span>
+        <span class="chip" data-bucket="b90plus">90d+</span>
+      </div>
+      <button class="btn" id="clearBtn" style="margin-left:auto">Clear filters</button>
+      <button class="btn primary" id="exportBtn">Export CSV</button>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-head"><h2>Ageing breakdown</h2></div>
+        <div id="ageingChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Outstanding trend</h2></div>
+        <div id="trendChart"></div>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-head"><h2>By executive</h2></div>
+        <div id="execChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>By city</h2></div>
+        <div id="cityChart"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head"><h2>Top overdue dealers</h2></div>
+      <div class="table-scroll" style="max-height:none">
+        <table class="dtable" id="topTable">
+          <thead><tr><th>Dealer</th><th>Executive</th><th>City</th><th class="num">Outstanding</th><th>Ageing split</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>All dealers</h2>
+        <span class="muted" id="tableCount" style="font-size:12px"></span>
+      </div>
+      <div class="table-scroll">
+        <table class="dtable" id="dealerTable">
+          <thead>
+            <tr>
+              <th data-sort="name">Dealer</th>
+              <th data-sort="executive">Executive</th>
+              <th data-sort="city">City</th>
+              <th data-sort="total" class="num">Outstanding</th>
+              <th>Ageing split</th>
+              <th>WhatsApp status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var BUCKET_ORDER = ["b0_30", "b31_60", "b61_90", "b90plus"];
+  var BUCKET_LABEL  = { b0_30: "0–30 days", b31_60: "31–60 days", b61_90: "61–90 days", b90plus: "90+ days" };
+  var BUCKET_COLOR_VAR = { b0_30: "--status-good", b31_60: "--status-warning", b61_90: "--status-serious", b90plus: "--status-critical" };
+  var CAT_VARS = ["--series-1","--series-2","--series-3","--series-4","--series-5","--series-6","--series-7","--series-8"];
+
+  var root = document.querySelector(".viz-root");
+  function cssVar(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
+  function fmtINR(n) {
+    n = Math.round(Number(n) || 0);
+    return "₹" + n.toLocaleString("en-IN");
+  }
+  function fmtCompact(n) {
+    n = Number(n) || 0;
+    var abs = Math.abs(n);
+    if (abs >= 1e7) return "₹" + (n / 1e7).toFixed(2) + " Cr";
+    if (abs >= 1e5) return "₹" + (n / 1e5).toFixed(2) + " L";
+    if (abs >= 1e3) return "₹" + (n / 1e3).toFixed(1) + " K";
+    return "₹" + Math.round(n).toLocaleString("en-IN");
+  }
+  function esc(s) { return (s === undefined || s === null) ? "" : String(s); }
+
+  // ---------- tooltip ----------
+  var ttEl = document.getElementById("tooltip");
+  function showTT(evt, html) {
+    ttEl.innerHTML = html;
+    ttEl.classList.add("show");
+    var x = evt.clientX + 14, y = evt.clientY + 14;
+    var r = ttEl.getBoundingClientRect();
+    if (x + r.width > window.innerWidth) x = evt.clientX - r.width - 14;
+    if (y + r.height > window.innerHeight) y = evt.clientY - r.height - 14;
+    ttEl.style.left = x + "px";
+    ttEl.style.top = y + "px";
+  }
+  function moveTT(evt) {
+    if (!ttEl.classList.contains("show")) return;
+    var x = evt.clientX + 14, y = evt.clientY + 14;
+    var r = ttEl.getBoundingClientRect();
+    if (x + r.width > window.innerWidth) x = evt.clientX - r.width - 14;
+    if (y + r.height > window.innerHeight) y = evt.clientY - r.height - 14;
+    ttEl.style.left = x + "px";
+    ttEl.style.top = y + "px";
+  }
+  function hideTT() { ttEl.classList.remove("show"); }
+
+  // ---------- demo data (used only when there is no Apps Script host) ----------
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function buildDemoData() {
+    var rnd = mulberry32(20260915);
+    var executives = ["ABHISHEK", "AJAY", "AMIT", "UMAKANT", "SHEERY", "MAHIPAL SHIKHAWAT"];
+    var cities = ["Lucknow", "Kanpur", "Varanasi", "Gorakhpur", "Prayagraj", "Agra", "Meerut", "Bareilly"];
+    var monthMap = { 0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep",9:"Oct",10:"Nov",11:"Dec" };
+    var now = new Date();
+    var months = [];
+    for (var k = 5; k >= 0; k--) {
+      var d = new Date(now.getFullYear(), now.getMonth() - k, 1);
+      months.push(monthMap[d.getMonth()] + " " + String(d.getFullYear()).slice(2));
+    }
+    var dealers = [];
+    var nameRoots = ["Shree", "New", "Balaji", "Ganesh", "City", "Modern", "Krishna", "Om", "Deep", "Royal",
+      "Sharma", "Verma", "Gupta", "Fashion", "Style", "Elite", "Prime", "Classic", "Trendy", "Metro"];
+    var suffixes = ["Garments", "Textiles", "Collection", "Cloth House", "Traders", "Vastralaya", "Fashions"];
+    for (var i = 0; i < 42; i++) {
+      var name = nameRoots[Math.floor(rnd() * nameRoots.length)] + " " + suffixes[Math.floor(rnd() * suffixes.length)] + " " + (i + 1);
+      var exec = executives[Math.floor(rnd() * executives.length)];
+      var city = cities[Math.floor(rnd() * cities.length)];
+      var monthsObj = {};
+      var active = rnd() > 0.12;
+      months.forEach(function (m, mi) {
+        if (!active) { monthsObj[m] = 0; return; }
+        var base = rnd() * 46000 * (0.4 + (mi / months.length));
+        monthsObj[m] = rnd() > 0.35 ? Math.round(base) : 0;
+      });
+      dealers.push({ name: name, executive: exec, phone: "9" + Math.floor(100000000 + rnd() * 899999999), months: monthsObj, city: city, status: rnd() > 0.55 ? ("Sent by CRM at " + (1 + Math.floor(rnd()*12)) + ":00 " + (rnd()>0.5?"AM":"PM")) : "" });
+    }
+    return aggregate({ dealers: dealers, executives: executives, dynamicMonths: months }, dealers);
+  }
+
+  // Mirrors the ageing-bucket math in code.gs, for the demo data path only.
+  function monthLabelToDate(label) {
+    var mm = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+    var parts = label.trim().split(" ");
+    if (parts.length !== 2) return null;
+    var mon = mm[parts[0]];
+    var yr = parts[1].length === 2 ? 2000 + Number(parts[1]) : Number(parts[1]);
+    return new Date(yr, mon, 1);
+  }
+  function ageingBucket(monthDate, today) {
+    if (!monthDate) return "b0_30";
+    var diff = (today.getFullYear() - monthDate.getFullYear()) * 12 + (today.getMonth() - monthDate.getMonth());
+    if (diff <= 0) return "b0_30";
+    if (diff === 1) return "b31_60";
+    if (diff === 2) return "b61_90";
+    return "b90plus";
+  }
+  function aggregate(base, rawDealers) {
+    var today = new Date();
+    var monthDates = {};
+    base.dynamicMonths.forEach(function (m) { monthDates[m] = monthLabelToDate(m); });
+    var totalOutstanding = 0;
+    var ageingTotals = { b0_30: 0, b31_60: 0, b61_90: 0, b90plus: 0 };
+    var execMap = {}, cityMap = {}, monthlyTotals = {};
+    base.dynamicMonths.forEach(function (m) { monthlyTotals[m] = 0; });
+
+    var dealers = rawDealers.map(function (d) {
+      var total = 0, buckets = { b0_30: 0, b31_60: 0, b61_90: 0, b90plus: 0 };
+      base.dynamicMonths.forEach(function (m) {
+        var val = Number(d.months[m]) || 0;
+        total += val;
+        monthlyTotals[m] += val;
+        if (val !== 0) buckets[ageingBucket(monthDates[m], today)] += val;
+      });
+      totalOutstanding += total;
+      Object.keys(ageingTotals).forEach(function (b) { ageingTotals[b] += buckets[b]; });
+
+      var execName = d.executive || "Unassigned";
+      execMap[execName] = execMap[execName] || { name: execName, total: 0, count: 0 };
+      execMap[execName].total += total;
+      if (total > 0) execMap[execName].count += 1;
+
+      var cityName = d.city || "Unknown";
+      cityMap[cityName] = cityMap[cityName] || { name: cityName, total: 0, count: 0 };
+      cityMap[cityName].total += total;
+      if (total > 0) cityMap[cityName].count += 1;
+
+      return { name: d.name, executive: d.executive || "", phone: d.phone, city: d.city || "", status: d.status || "", total: total, buckets: buckets };
+    });
+
+    dealers.sort(function (a, b) { return b.total - a.total; });
+    var byExecutive = Object.keys(execMap).map(function (k) { return execMap[k]; })
+      .sort(function (a, b) { return b.total - a.total; })
+      .map(function (e) { return { name: e.name, total: e.total, count: e.count, pct: totalOutstanding ? (e.total / totalOutstanding * 100) : 0 }; });
+    var byCity = Object.keys(cityMap).map(function (k) { return cityMap[k]; }).sort(function (a, b) { return b.total - a.total; });
+    var monthlyTotalsArr = base.dynamicMonths.map(function (m) { return { month: m, total: monthlyTotals[m] }; });
+    var topOverdue = dealers.filter(function (d) { return d.total > 0; }).slice(0, 15);
+
+    return {
+      generatedAt: today.toISOString(), totalOutstanding: totalOutstanding,
+      dealerCount: dealers.filter(function (d) { return d.total > 0; }).length,
+      totalDealers: dealers.length, ageingTotals: ageingTotals,
+      byExecutive: byExecutive, byCity: byCity, topOverdue: topOverdue,
+      dealers: dealers, monthlyTotals: monthlyTotalsArr, months: base.dynamicMonths
+    };
+  }
+
+  // ---------- state ----------
+  var DATA = null;
+  var filters = { search: "", exec: "", city: "", bucket: "" };
+  var sort = { key: "total", dir: -1 };
+
+  function foldOther(list, cap) {
+    if (list.length <= cap) return list;
+    var head = list.slice(0, cap - 1);
+    var restTotal = list.slice(cap - 1).reduce(function (s, r) { return s + r.total; }, 0);
+    var restCount = list.slice(cap - 1).reduce(function (s, r) { return s + r.count; }, 0);
+    head.push({ name: "Other", total: restTotal, count: restCount });
+    return head;
+  }
+
+  // ---------- renderers ----------
+  function renderKPIs(d) {
+    var awaiting = d.dealers.filter(function (x) { return x.total > 0 && !x.status; }).length;
+    var el = document.getElementById("kpiGrid");
+    el.innerHTML =
+      '<div class="kpi-tile"><div class="kpi-label">Total outstanding</div><div class="kpi-value hero">' + fmtCompact(d.totalOutstanding) + '</div><div class="kpi-foot">' + fmtINR(d.totalOutstanding) + '</div></div>' +
+      '<div class="kpi-tile"><div class="kpi-label">Dealers with dues</div><div class="kpi-value">' + d.dealerCount + '</div><div class="kpi-foot">of ' + d.totalDealers + ' total dealers</div></div>' +
+      '<div class="kpi-tile critical"><div class="kpi-label">90+ days overdue</div><div class="kpi-value">' + fmtCompact(d.ageingTotals.b90plus) + '</div><div class="kpi-foot">oldest, highest risk</div></div>' +
+      '<div class="kpi-tile"><div class="kpi-label">Awaiting follow-up</div><div class="kpi-value">' + awaiting + '</div><div class="kpi-foot">dealers with dues, no WhatsApp sent yet</div></div>';
+  }
+
+  function renderAgeingChart(d) {
+    var total = BUCKET_ORDER.reduce(function (s, b) { return s + d.ageingTotals[b]; }, 0) || 1;
+    var html = '<div class="ageing-bar-row">';
+    BUCKET_ORDER.forEach(function (b) {
+      var pct = (d.ageingTotals[b] / total) * 100;
+      if (pct <= 0) return;
+      html += '<div class="ageing-seg" data-b="' + b + '" style="width:' + pct + '%;background:var(' + BUCKET_COLOR_VAR[b] + ')"></div>';
+    });
+    html += '</div><div class="legend">';
+    BUCKET_ORDER.forEach(function (b) {
+      html += '<div class="legend-item"><span class="swatch" style="background:var(' + BUCKET_COLOR_VAR[b] + ')"></span>' + BUCKET_LABEL[b] + ' — ' + fmtCompact(d.ageingTotals[b]) + '</div>';
+    });
+    html += '</div>';
+    var box = document.getElementById("ageingChart");
+    box.innerHTML = html;
+    box.querySelectorAll(".ageing-seg").forEach(function (seg) {
+      var b = seg.getAttribute("data-b");
+      seg.addEventListener("pointermove", function (e) { showTT(e, BUCKET_LABEL[b] + "<br><b>" + fmtINR(d.ageingTotals[b]) + "</b>"); });
+      seg.addEventListener("pointerleave", hideTT);
+    });
+  }
+
+  function renderHBarChart(container, rows, colorFor, max) {
+    max = max || Math.max.apply(null, rows.map(function (r) { return r.total; }).concat([1]));
+    var html = "";
+    rows.forEach(function (r, i) {
+      var pct = max ? (r.total / max) * 100 : 0;
+      html += '<div class="hbar-row" data-i="' + i + '">' +
+        '<div class="hbar-label" title="' + esc(r.name) + '">' + esc(r.name) + '</div>' +
+        '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%;background:' + colorFor(i) + '"></div></div>' +
+        '<div class="hbar-value">' + fmtCompact(r.total) + '</div></div>';
+    });
+    container.innerHTML = html;
+    container.querySelectorAll(".hbar-row").forEach(function (row) {
+      var i = Number(row.getAttribute("data-i"));
+      var r = rows[i];
+      row.addEventListener("pointermove", function (e) { showTT(e, esc(r.name) + (r.count !== undefined ? " · " + r.count + " dealers" : "") + "<br><b>" + fmtINR(r.total) + "</b>"); });
+      row.addEventListener("pointerleave", hideTT);
+    });
+  }
+
+  function renderExecChart(d) {
+    var rows = foldOther(d.byExecutive, 8);
+    renderHBarChart(document.getElementById("execChart"), rows, function (i) { return "var(" + CAT_VARS[i % CAT_VARS.length] + ")"; });
+  }
+  function renderCityChart(d) {
+    var rows = foldOther(d.byCity, 7);
+    renderHBarChart(document.getElementById("cityChart"), rows, function (i) { return "var(" + CAT_VARS[i % CAT_VARS.length] + ")"; });
+  }
+
+  function renderTrendChart(d) {
+    var box = document.getElementById("trendChart");
+    var vals = d.monthlyTotals;
+    if (!vals.length) { box.innerHTML = '<div class="muted" style="font-size:12px">No monthly data.</div>'; return; }
+    var w = Math.max(box.clientWidth || 320, 280), h = 160, padL = 8, padR = 8, padT = 14, padB = 22;
+    var max = Math.max.apply(null, vals.map(function (v) { return v.total; }).concat([1]));
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var stepX = vals.length > 1 ? innerW / (vals.length - 1) : 0;
+    var pts = vals.map(function (v, i) {
+      var x = padL + stepX * i;
+      var y = padT + innerH - (v.total / max) * innerH;
+      return { x: x, y: y, v: v };
+    });
+    var linePath = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ");
+    var areaPath = linePath + " L" + pts[pts.length - 1].x.toFixed(1) + "," + (padT + innerH) + " L" + pts[0].x.toFixed(1) + "," + (padT + innerH) + " Z";
+    var color = cssVar("--series-1") || "#2a78d6";
+
+    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="overflow:visible">' +
+      '<line x1="' + padL + '" y1="' + (padT + innerH) + '" x2="' + (w - padR) + '" y2="' + (padT + innerH) + '" stroke="var(--baseline)" stroke-width="1"/>' +
+      '<path d="' + areaPath + '" fill="' + color + '" opacity="0.10" stroke="none"/>' +
+      '<path d="' + linePath + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    pts.forEach(function (p, i) {
+      svg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="' + color + '" stroke="var(--surface-1)" stroke-width="2" data-i="' + i + '" class="tpt"/>';
+      svg += '<text x="' + p.x.toFixed(1) + '" y="' + (h - 6) + '" font-size="10" fill="var(--text-muted)" text-anchor="middle">' + esc(p.v.month) + '</text>';
+    });
+    // end label
+    var last = pts[pts.length - 1];
+    svg += '<text x="' + last.x.toFixed(1) + '" y="' + Math.max(10, last.y - 8) + '" font-size="11" font-weight="600" fill="var(--text-primary)" text-anchor="end">' + fmtCompact(last.v.total) + '</text>';
+    svg += '</svg>';
+    box.innerHTML = svg;
+
+    box.querySelectorAll(".tpt").forEach(function (dot) {
+      var i = Number(dot.getAttribute("data-i"));
+      dot.addEventListener("pointermove", function (e) { showTT(e, esc(pts[i].v.month) + "<br><b>" + fmtINR(pts[i].v.total) + "</b>"); });
+      dot.addEventListener("pointerleave", hideTT);
+      dot.style.pointerEvents = "all";
+    });
+  }
+
+  function miniAgeingBar(buckets, total) {
+    total = total || 1;
+    var html = '<div class="mini-bar">';
+    BUCKET_ORDER.forEach(function (b) {
+      var pct = (buckets[b] / total) * 100;
+      if (pct > 0) html += '<div class="mini-seg" data-b="' + b + '" style="width:' + pct + '%;background:var(' + BUCKET_COLOR_VAR[b] + ')"></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function rowAgeingTitle(r) {
+    return BUCKET_ORDER.filter(function (b) { return r.buckets[b] > 0; })
+      .map(function (b) { return BUCKET_LABEL[b] + ": " + fmtINR(r.buckets[b]); }).join(" · ") || "No dues";
+  }
+
+  function renderTopTable(d) {
+    var tbody = document.querySelector("#topTable tbody");
+    tbody.innerHTML = d.topOverdue.map(function (r) {
+      return "<tr><td>" + esc(r.name) + "</td><td>" + esc(r.executive) + "</td><td>" + esc(r.city) + "</td>" +
+        "<td class='num'>" + fmtINR(r.total) + "</td><td title='" + esc(rowAgeingTitle(r)) + "'>" + miniAgeingBar(r.buckets, r.total) + "</td></tr>";
+    }).join("");
+  }
+
+  function applyFilters(d) {
+    return d.dealers.filter(function (r) {
+      if (filters.search && r.name.toLowerCase().indexOf(filters.search) === -1) return false;
+      if (filters.exec && r.executive !== filters.exec) return false;
+      if (filters.city && r.city !== filters.city) return false;
+      if (filters.bucket && !(r.buckets[filters.bucket] > 0)) return false;
+      return true;
+    });
+  }
+
+  function renderDealerTable(d) {
+    var rows = applyFilters(d);
+    rows.sort(function (a, b) {
+      var av = a[sort.key], bv = b[sort.key];
+      if (typeof av === "string") return av.localeCompare(bv) * sort.dir * -1;
+      return (av - bv) * sort.dir;
+    });
+    document.getElementById("tableCount").textContent = rows.length + " of " + d.dealers.length + " dealers";
+    var tbody = document.querySelector("#dealerTable tbody");
+    tbody.innerHTML = rows.map(function (r) {
+      var statusHtml = r.status ? "<span class='status-pill'>" + esc(r.status) + "</span>" : "<span class='status-pill empty'>Not contacted</span>";
+      return "<tr><td>" + esc(r.name) + "</td><td>" + esc(r.executive) + "</td><td>" + esc(r.city) + "</td>" +
+        "<td class='num'>" + fmtINR(r.total) + "</td>" +
+        "<td title='" + esc(rowAgeingTitle(r)) + "'>" + miniAgeingBar(r.buckets, r.total) + "</td>" +
+        "<td>" + statusHtml + "</td></tr>";
+    }).join("");
+  }
+
+  function populateFilterOptions(d) {
+    var execSel = document.getElementById("execFilter");
+    var citySel = document.getElementById("cityFilter");
+    var execs = Array.from(new Set(d.dealers.map(function (r) { return r.executive; }).filter(Boolean))).sort();
+    var cities = Array.from(new Set(d.dealers.map(function (r) { return r.city; }).filter(Boolean))).sort();
+    execSel.innerHTML = '<option value="">All executives</option>' + execs.map(function (e) { return '<option value="' + esc(e) + '">' + esc(e) + '</option>'; }).join("");
+    citySel.innerHTML = '<option value="">All cities</option>' + cities.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join("");
+  }
+
+  function renderAll(d) {
+    DATA = d;
+    document.getElementById("genAt").textContent = "Updated " + new Date(d.generatedAt).toLocaleString("en-IN", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+    renderKPIs(d);
+    renderAgeingChart(d);
+    renderTrendChart(d);
+    renderExecChart(d);
+    renderCityChart(d);
+    renderTopTable(d);
+    populateFilterOptions(d);
+    renderDealerTable(d);
+  }
+
+  function exportCSV() {
+    if (!DATA) return;
+    var rows = applyFilters(DATA);
+    var header = ["Dealer", "Executive", "City", "Outstanding", "0-30d", "31-60d", "61-90d", "90d+", "WhatsApp Status"];
+    var lines = [header.join(",")];
+    rows.forEach(function (r) {
+      var line = [r.name, r.executive, r.city, r.total, r.buckets.b0_30, r.buckets.b31_60, r.buckets.b61_90, r.buckets.b90plus, r.status]
+        .map(function (v) { v = String(v === undefined || v === null ? "" : v); return '"' + v.replace(/"/g, '""') + '"'; }).join(",");
+      lines.push(line);
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "outstanding_" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function wireUI() {
+    document.getElementById("searchBox").addEventListener("input", function (e) {
+      filters.search = e.target.value.trim().toLowerCase();
+      renderDealerTable(DATA);
+    });
+    document.getElementById("execFilter").addEventListener("change", function (e) {
+      filters.exec = e.target.value;
+      renderDealerTable(DATA);
+    });
+    document.getElementById("cityFilter").addEventListener("change", function (e) {
+      filters.city = e.target.value;
+      renderDealerTable(DATA);
+    });
+    document.getElementById("bucketChips").addEventListener("click", function (e) {
+      var chip = e.target.closest(".chip");
+      if (!chip) return;
+      document.querySelectorAll("#bucketChips .chip").forEach(function (c) { c.classList.remove("on"); });
+      chip.classList.add("on");
+      filters.bucket = chip.getAttribute("data-bucket") || "";
+      renderDealerTable(DATA);
+    });
+    document.getElementById("clearBtn").addEventListener("click", function () {
+      filters = { search: "", exec: "", city: "", bucket: "" };
+      document.getElementById("searchBox").value = "";
+      document.getElementById("execFilter").value = "";
+      document.getElementById("cityFilter").value = "";
+      document.querySelectorAll("#bucketChips .chip").forEach(function (c) { c.classList.remove("on"); });
+      document.querySelector('#bucketChips .chip[data-bucket=""]').classList.add("on");
+      renderDealerTable(DATA);
+    });
+    document.getElementById("exportBtn").addEventListener("click", exportCSV);
+    document.querySelectorAll("#dealerTable th[data-sort]").forEach(function (th) {
+      th.addEventListener("click", function () {
+        var key = th.getAttribute("data-sort");
+        if (sort.key === key) sort.dir *= -1; else { sort.key = key; sort.dir = key === "total" ? -1 : 1; }
+        renderDealerTable(DATA);
+      });
+    });
+    window.addEventListener("pointermove", moveTT);
+    window.addEventListener("resize", function () { if (DATA) renderTrendChart(DATA); });
+  }
+
+  function boot() {
+    wireUI();
+    var hasHost = (typeof google !== "undefined") && google.script && google.script.run;
+    if (hasHost) {
+      google.script.run.withSuccessHandler(function (r) {
+        document.getElementById("loadDiv").style.display = "none";
+        document.getElementById("body").style.display = "block";
+        renderAll(r);
+      }).withFailureHandler(function (err) {
+        document.getElementById("loadDiv").innerHTML = "❌ Could not load dashboard data<br><br>" + esc(err && err.message);
+      }).getDashboardData();
+    } else {
+      document.getElementById("demoFlag").style.display = "inline-block";
+      var demo = buildDemoData();
+      document.getElementById("loadDiv").style.display = "none";
+      document.getElementById("body").style.display = "block";
+      renderAll(demo);
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

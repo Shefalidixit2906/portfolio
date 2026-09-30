@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      background: #f8f9fa;
+      color: #202124
+    }
+
+    .topbar {
+      background: #075E54;
+      padding: 15px;
+      display: flex;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10
+    }
+
+    .body {
+      padding: 12px
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e8eaed;
+      border-radius: 10px;
+      padding: 13px;
+      margin-bottom: 10px
+    }
+
+    .lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #5f6368;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      display: block
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid #dadce0;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      outline: none
+    }
+
+    .mgrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin: 10px 0
+    }
+
+    .mtile {
+      border: 1.5px solid #e0e0e0;
+      border-radius: 7px;
+      padding: 8px;
+      cursor: pointer;
+      background: #fafafa;
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .mtile.on {
+      background: #e8f5e9;
+      border-color: #34a853;
+      color: #137333
+    }
+
+    .m-name {
+      font-size: 10px;
+      font-weight: 700
+    }
+
+    .btn {
+      width: 100%;
+      height: 42px;
+      border-radius: 21px;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px
+    }
+
+    .btn-wa {
+      background: #25D366;
+      color: #fff
+    }
+
+    .loading {
+      text-align: center;
+      padding: 50px
+    }
+
+    .spin {
+      width: 25px;
+      height: 25px;
+      border: 3px solid #ddd;
+      border-top-color: #25D366;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 10px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar"><strong>WhatsApp Generator (Feb-Mar)</strong></div>
+
+  <div class="body">
+    <div id="loadDiv" class="loading">
+      <div class="spin"></div>Fetching Data...
+    </div>
+    <div id="appDiv" style="display:none">
+      <div class="card">
+        <span class="lbl">Filter Executive</span>
+        <select id="execDrop" onchange="applyFilters()"></select>
+        <span class="lbl">Search Party</span>
+        <input type="text" id="searchBox" placeholder="Start typing name..." oninput="applyFilters()">
+        <span class="lbl">Select Dealer</span>
+        <select id="dealerDrop" onchange="onPick()"></select>
+      </div>
+
+      <div id="panel" style="display:none">
+        <div class="card">
+          <h3 id="dName" style="color:#075E54"></h3>
+          <div id="dPhone" style="font-size:12px;margin-bottom:10px"></div>
+          <span class="lbl">Select Months</span>
+          <div class="mgrid" id="mGrid"></div>
+        </div>
+        <div class="card">
+          <span class="lbl">Message Preview</span>
+          <textarea id="msgBox" rows="10" readonly></textarea>
+          <button class="btn btn-wa" id="waBtn" onclick="sendWA()">Send WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var MO = [], MF = {}, ALL = [], FIL = [], CUR = null, SEL = {};
+
+function loadData() {
+  google.script.run
+    .withSuccessHandler(r => {
+      console.log("DATA:", r);
+
+      ALL = r.dealers || [];
+
+      MO = (r.dynamicMonths || []).map(m => m.toString().trim());
+      MF = {};
+
+      MO.forEach(m => {
+        let parts = m.split(' ');
+        if (parts.length === 2) {
+          let year = parts[1].length === 2 ? "20" + parts[1] : parts[1];
+          MF[m] = parts[0] + " " + year;
+        } else {
+          MF[m] = m;
+        }
+      });
+
+      var d = document.getElementById('execDrop');
+      d.innerHTML = '<option value="">All Executives</option>';
+      (r.executives || []).forEach(e => d.add(new Option(e, e)));
+
+      document.getElementById('loadDiv').style.display = 'none';
+      document.getElementById('appDiv').style.display = 'block';
+
+      applyFilters();
+    })
+    .withFailureHandler(err => {
+      console.error("ERROR:", err);
+      document.getElementById('loadDiv').innerHTML = 
+        "❌ Error loading data<br><br>" + err.message;
+    })
+    .getData();
+}
+
+function applyFilters() {
+  var ex = document.getElementById('execDrop').value;
+  var q = document.getElementById('searchBox').value.toLowerCase();
+  FIL = ALL.filter(d => (!ex || d.executive === ex) && (!q || d.name.toLowerCase().includes(q)));
+  var d = document.getElementById('dealerDrop');
+  d.innerHTML = '<option value="">— Choose Dealer (' + FIL.length + ') —</option>';
+  FIL.forEach((x, i) => d.add(new Option(x.name, i)));
+  document.getElementById('panel').style.display = 'none';
+}
+
+function onPick() {
+  var idx = document.getElementById('dealerDrop').value;
+  if (idx === '') return;
+
+  CUR = FIL[idx];
+  SEL = {};
+
+  MO.forEach(m => {
+    if (Number(CUR.months[m]) > 0) SEL[m] = true;
+  });
+
+  document.getElementById('panel').style.display = 'block';
+  document.getElementById('dName').innerText = CUR.name;
+  document.getElementById('dPhone').innerText = CUR.phone ? "📞 " + CUR.phone : "⚠️ No Phone Found";
+
+  renderGrid();
+  updateMsg(); // ✅ FIX: Call directly, no setTimeout needed
+}
+
+function renderGrid() {
+  var g = document.getElementById('mGrid');
+  g.innerHTML = '';
+  MO.forEach(m => {
+  if (!CUR.months[m] || Number(CUR.months[m]) <= 0) return;
+    var t = document.createElement('div');
+    t.className = 'mtile' + (SEL[m] ? ' on' : '');
+    t.innerHTML = '<div class="m-name">' + m + '</div><div>₹' + Math.round(CUR.months[m]).toLocaleString('en-IN') + '</div>';
+    t.onclick = function() { SEL[m] = !SEL[m]; renderGrid(); updateMsg(); };
+    g.appendChild(t);
+  });
+}
+
+function updateMsg() {
+
+  const msgBox = document.getElementById('msgBox');
+
+  if (!CUR || !CUR.months) {
+    msgBox.value = "Select a dealer first.";
+    return;
+  }
+
+  // ✅ ONLY selected months
+  const selKeys = Object.keys(SEL).filter(m => SEL[m]);
+
+  if (selKeys.length === 0) {
+    msgBox.value = "No months selected.";
+    return;
+  }
+
+  // ✅ Total amount
+  const total = selKeys.reduce(
+    (sum, m) => sum + Number(CUR.months[m]),
+    0
+  );
+
+  // ✅ First + Last month
+  const since = selKeys[0];
+  const until = selKeys[selKeys.length - 1];
+
+  // ✅ Final message
+  msgBox.value =
+`Dear *${CUR.name}*,
+
+Your outstanding with NATHJI AGENCIES PVT. LTD. (NEXT ATTIRE) is *₹${total.toLocaleString('en-IN')}*, pending from *${since}* to *${until}*.
+
+*Month-wise breakup:*
+${selKeys.map(m =>
+`*${m}*: *₹${Number(CUR.months[m]).toLocaleString('en-IN')}*`
+).join('\n')}
+
+Kindly arrange payment at the earliest.
+
+Thank you.`;
+
+}
+
+
+// function sendWA() {
+//   if (!CUR.phone) {
+//     alert("No phone number available!");
+//     return;
+//   }
+
+//   var message = document.getElementById('msgBox').value;
+
+//   // Dealer WhatsApp
+//   var dealerLink = "https://wa.me/91" + CUR.phone + "?text=" + encodeURIComponent(message);
+
+//   // Executive WhatsApp (2nd tab)
+//   var execPhones = {
+//     "ABHISHEK": "919648896777",
+//     "AJAY": "918601696777",
+//     "AMIT": "919648896777"
+//   };
+
+//   var execPhone = execPhones[(CUR.executive || "").toUpperCase()] || "";
+
+//   var notifyMsg = `CRM contacted your dealer ${CUR.name}`;
+//   var execLink = execPhone 
+//     ? "https://wa.me/" + execPhone + "?text=" + encodeURIComponent(notifyMsg)
+//     : null;
+
+//   // Open WhatsApp
+//   window.open(dealerLink, '_blank');
+
+//   if (execLink) {
+//     setTimeout(() => window.open(execLink, '_blank'), 500);
+//   }
+
+//   // Backend log/update
+//   google.script.run.sendWhatsAppFromSidebar({
+//     dealer: CUR.name,
+//     phone: CUR.phone,
+//     executive: CUR.executive,
+//     message: message
+//   });
+// }
+
+function sendWA() {
+
+  if (!CUR.phone) {
+    alert("No phone number available!");
+    return;
+  }
+
+  var message =
+    document.getElementById('msgBox').value;
+
+  // Dealer WhatsApp
+  var dealerLink =
+    "https://wa.me/" +
+    CUR.phone +
+    "?text=" +
+    encodeURIComponent(message);
+
+  // Executive numbers
+  var execPhones = {
+    "ABHISHEK": "919648896777",
+    "AJAY": "918601696777",
+    "AMIT": "919648896777"
+  };
+
+  var execPhone =
+    execPhones[
+      (CUR.executive || "")
+      .toUpperCase()
+      .trim()
+    ] || "";
+
+  // Executive notification
+  var notifyMsg =
+`CRM contacted dealer:
+
+${CUR.name}
+
+Outstanding follow-up initiated.`;
+
+  // Open dealer chat
+  window.open(dealerLink, '_blank');
+
+  // Open executive notification
+  if (execPhone) {
+
+    var execLink =
+      "https://wa.me/" +
+      execPhone +
+      "?text=" +
+      encodeURIComponent(notifyMsg);
+
+    setTimeout(() => {
+      window.open(execLink, '_blank');
+    }, 700);
+
+  }
+
+  // Backend logging
+  google.script.run
+    .sendWhatsAppFromSidebar({
+      dealer: CUR.name,
+      phone: CUR.phone,
+      executive: CUR.executive,
+      message: message
+    });
+
+}
+loadData();
+  </script>
+</body>
+
+</html>

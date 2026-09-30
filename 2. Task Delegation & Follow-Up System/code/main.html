@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delegation System</title>
+
+  <!-- Material Design Web Components -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  
+  <!-- Material Design Components Web -->
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+  
+  <!-- Date picker -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+    integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    :root {
+      --mdc-theme-primary: #1976d2;
+      --mdc-theme-secondary: #424242;
+      --mdc-theme-background: #ffffff;
+      --mdc-theme-surface: #ffffff;
+      --mdc-theme-error: #b00020;
+      --mdc-theme-on-primary: #ffffff;
+      --mdc-theme-on-secondary: #ffffff;
+      --mdc-theme-on-surface: #212121;
+      --mdc-theme-on-error: #ffffff;
+      --mdc-typography-font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      font-family: var(--mdc-typography-font-family);
+      background-color: #f5f5f5;
+      color: var(--mdc-theme-on-surface);
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      flex: 1;
+    }
+
+    .mdc-top-app-bar {
+      position: sticky;
+      top: 0;
+      z-index: 7;
+    }
+
+    .app-content {
+      padding: 24px 0;
+    }
+
+    .mdc-tab-bar {
+      margin-bottom: 24px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .mdc-tab {
+      flex-grow: 1;
+      height: 56px;
+    }
+
+    .mdc-tab__icon {
+      margin-right: 8px;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10000;
+      background-color: rgba(255, 255, 255, 0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mdc-circular-progress {
+      width: 48px;
+      height: 48px;
+    }
+
+    .loading-text {
+      margin-top: 16px;
+      font-size: 16px;
+      color: var(--mdc-theme-primary);
+    }
+
+    .invisible {
+      visibility: hidden;
+    }
+
+    /* Card styling */
+    .mdc-card {
+      margin-bottom: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .app-card__content {
+      padding: 16px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .app-container {
+        padding: 8px;
+      }
+      
+      .app-content {
+        padding: 16px 0;
+      }
+
+      .mdc-tab .mdc-tab__text-label {
+        display: none;
+      }
+
+      .mdc-tab .mdc-tab__icon {
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+
+<body class="mdc-typography">
+  <header class="mdc-top-app-bar">
+    <div class="mdc-top-app-bar__row">
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+        <span class="mdc-top-app-bar__title">Delegation System</span>
+      </section>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <div class="app-content">
+      <div class="mdc-tab-bar" role="tablist">
+        <div class="mdc-tab-scroller">
+          <div class="mdc-tab-scroller__scroll-area">
+            <div class="mdc-tab-scroller__scroll-content">
+              <button class="mdc-tab mdc-tab--active" id="add-new-task-link" role="tab" aria-selected="true" tabindex="0">
+                <span class="mdc-tab__content">
+                  <span class="material-icons mdc-tab__icon">add_task</span>
+                  <span class="mdc-tab__text-label">Add New Task</span>
+                </span>
+                <span class="mdc-tab-indicator mdc-tab-indicator--active">
+                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                </span>
+                <span class="mdc-tab__ripple"></span>
+              </button>
+              <button class="mdc-tab" id="follow-up-link" role="tab" aria-selected="false" tabindex="-1">
+                <span class="mdc-tab__content">
+                  <span class="material-icons mdc-tab__icon">update</span>
+                  <span class="mdc-tab__text-label">Follow Up</span>
+                </span>
+                <span class="mdc-tab-indicator">
+                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                </span>
+                <span class="mdc-tab__ripple"></span>
+              </button>
+              <button class="mdc-tab" id="all-pending-tasks" role="tab" aria-selected="false" tabindex="-1">
+                <span class="mdc-tab__content">
+                  <span class="material-icons mdc-tab__icon">pending_actions</span>
+                  <span class="mdc-tab__text-label">All Pending Tasks</span>
+                </span>
+                <span class="mdc-tab-indicator">
+                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                </span>
+                <span class="mdc-tab__ripple"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="app"></div>
+    </div>
+  </div>
+
+  <div id="loading" class="invisible">
+    <div class="spinner-container">
+      <div class="mdc-circular-progress" role="progressbar" aria-label="Loading..." aria-valuemin="0" aria-valuemax="1">
+        <div class="mdc-circular-progress__determinate-container">
+          <svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48">
+            <circle class="mdc-circular-progress__determinate-track" cx="24" cy="24" r="18" stroke-width="4"/>
+            <circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18" stroke-dasharray="113.097" 
+                    stroke-dashoffset="113.097" stroke-width="4"/>
+          </svg>
+        </div>
+        <div class="mdc-circular-progress__indeterminate-container">
+          <div class="mdc-circular-progress__spinner-layer">
+            <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+              <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+              </svg>
+            </div>
+            <div class="mdc-circular-progress__gap-patch">
+              <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="3.2"/>
+              </svg>
+            </div>
+            <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+              <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="loading-text">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Required JavaScript -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+    integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    // Material Design component initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all MDC components
+      mdc.autoInit();
+      
+      // Initialize the circular progress indicator
+      const circularProgress = document.querySelector('.mdc-circular-progress');
+      if (circularProgress) {
+        const circularProgressComponent = new mdc.circularProgress.MDCCircularProgress(circularProgress);
+        circularProgressComponent.determinate = false;
+      }
+      
+      // Initialize tab bar
+      const tabBar = document.querySelector('.mdc-tab-bar');
+      if (tabBar) {
+        const tabBarComponent = new mdc.tabBar.MDCTabBar(tabBar);
+        
+        // Add listeners for tab selection
+        tabBarComponent.listen('MDCTabBar:activated', function(event) {
+          const index = event.detail.index;
+          if (index === 0) {
+            loadAddView();
+          } else if (index === 1) {
+            loadFView();
+          } else if (index === 2) {
+            loadAllPendingView();
+          }
+        });
+      }
+      
+      // Preload data
+      preloadInitialData();
+      
+      // Load the initial view
+      loadFView(); 
+    });
+
+    var data;
+    var preloadedDoerNames = null;
+
+    function onFailure(error) {
+      console.log(error.message);
+    }
+
+    function removeActiveClasses() {
+      document.getElementById("follow-up-link").setAttribute("aria-selected", "false");
+      document.getElementById("add-new-task-link").setAttribute("aria-selected", "false");
+      document.getElementById("all-pending-tasks").setAttribute("aria-selected", "false");
+      
+      document.getElementById("follow-up-link").classList.remove("mdc-tab--active");
+      document.getElementById("add-new-task-link").classList.remove("mdc-tab--active");
+      document.getElementById("all-pending-tasks").classList.remove("mdc-tab--active");
+      
+      document.getElementById("follow-up-link").querySelector(".mdc-tab-indicator").classList.remove("mdc-tab-indicator--active");
+      document.getElementById("add-new-task-link").querySelector(".mdc-tab-indicator").classList.remove("mdc-tab-indicator--active");
+      document.getElementById("all-pending-tasks").querySelector(".mdc-tab-indicator").classList.remove("mdc-tab-indicator--active");
+    }
+
+    function loadFView(){
+      removeActiveClasses();
+      loadView({func : "loadFollowUpView", callback: setDataForSearch});
+      document.getElementById("follow-up-link").classList.add("mdc-tab--active");
+      document.getElementById("follow-up-link").setAttribute("aria-selected", "true");
+      document.getElementById("follow-up-link").querySelector(".mdc-tab-indicator").classList.add("mdc-tab-indicator--active");
+    }
+
+    function loadAddView(){
+      removeActiveClasses();
+      loadView({func : "loadAddNewView", callback:setDoerNames});
+      document.getElementById("add-new-task-link").classList.add("mdc-tab--active");
+      document.getElementById("add-new-task-link").setAttribute("aria-selected", "true");
+      document.getElementById("add-new-task-link").querySelector(".mdc-tab-indicator").classList.add("mdc-tab-indicator--active");
+    }
+
+    function loadAllPendingView() {
+      removeActiveClasses();
+      loadView({func : "loadPendingTasksView", callback:setSearchDataforAllPending});
+      document.getElementById("all-pending-tasks").classList.add("mdc-tab--active");
+      document.getElementById("all-pending-tasks").setAttribute("aria-selected", "true");
+      document.getElementById("all-pending-tasks").querySelector(".mdc-tab-indicator").classList.add("mdc-tab-indicator--active");
+    }
+
+    function setDoerNames() {
+      if (preloadedDoerNames) {
+        console.log("Using preloaded doer names.");
+        populateDoerDropdown(preloadedDoerNames);
+      } else {
+        console.log("Fetching doer names (fallback).");
+        google.script.run.withSuccessHandler(function(names) {
+          populateDoerDropdown(names);
+        })
+        .withFailureHandler(onFailure)
+        .getAllDoers();
+      }
+    }
+
+    function populateDoerDropdown(doersData) {
+      var dropdown = document.getElementById("name");
+      if (!dropdown) {
+        console.error("Assignee dropdown not found in populateDoerDropdown.");
+        return;
+      }
+
+      while (dropdown.options.length > 1) {
+        dropdown.remove(1);
+      }
+
+      doersData.forEach(function(doer) {
+        const name = doer[0];
+        const number = doer[1];
+        const email = doer[2];
+        
+        const displayText = `${name} (${email || 'N/A'}) - ${number || 'N/A'}`;
+        
+        var option = document.createElement("option");
+        option.textContent = displayText;
+        option.value = name;
+        dropdown.appendChild(option);
+      });
+      
+      if (typeof mdc !== 'undefined') {
+          const textFieldElement = dropdown.closest('.mdc-text-field');
+          if (textFieldElement) {
+            try {
+                const mdcTextFieldInstance = mdc.textField.MDCTextField.attachTo(textFieldElement);
+            } catch (e) {
+            }
+          }
+      }
+    }
+
+    function preloadInitialData() {
+      google.script.run.withSuccessHandler(function(doers) {
+        preloadedDoerNames = doers;
+        console.log("Doer data preloaded.");
+      }).withFailureHandler(function(error) {
+        console.error("Failed to preload doer data:", error);
+        onFailure(error);
+      }).getAllDoers();
+    }
+
+    function otherFunc(params){
+      if (document.getElementById("h1")) {
+        document.getElementById("h1").textContent = params.title;
+      }
+    }
+
+    function loadView(options){
+      var id = typeof options.id === "undefined" ? "app" : options.id;
+      var cb = typeof options.callback === "undefined" ? function(){} : options.callback;
+
+      loadingStart();
+      google.script.run.withSuccessHandler(function(html){
+        document.getElementById(id).innerHTML = html;
+        
+        if (typeof mdc !== 'undefined') {
+          mdc.autoInit();
+          
+          const textFields = document.querySelectorAll('.mdc-text-field');
+          textFields.forEach(textField => new mdc.textField.MDCTextField(textField));
+          
+          const buttons = document.querySelectorAll('.mdc-button');
+          buttons.forEach(button => new mdc.ripple.MDCRipple(button));
+          
+          const snackbars = document.querySelectorAll('.mdc-snackbar');
+          snackbars.forEach(snackbar => new mdc.snackbar.MDCSnackbar(snackbar));
+        }
+
+        // Initialize Bootstrap Datepicker if present
+        var datepickerInput = document.querySelector('.datepicker-input');
+        if (datepickerInput) {
+          $(datepickerInput).datepicker({
+  container: 'body',
+  orientation: 'bottom auto',
+  format: 'dd/mm/yyyy',
+  autoclose: true,
+  todayHighlight: true
+}).on('show', function() {
+   requestAnimationFrame(function() {
+     $('.datepicker').addClass('mdc-menu-surface mdc-menu-surface--open');
+     $('.datepicker-days th.dow').addClass('mdc-typography--subtitle2');
+     $('.datepicker .day').addClass('mdc-ripple-surface');
+     $('.datepicker .day.active').addClass('mdc-theme--primary-bg mdc-theme--on-primary');
+     $(datepickerInput).datepicker('place');
+   });
+}).on('changeDate', function() {
+   // Float the MDC label when datepicker sets a value
+   var label = datepickerInput.closest('.mdc-text-field')?.querySelector('.mdc-floating-label');
+   if (label && datepickerInput.value) {
+     label.classList.add('mdc-floating-label--float-above');
+   }
+});
+          
+
+          // Add click handler for the trailing calendar icon if present
+          var dateIcon = document.querySelector('.mdc-text-field__icon--trailing[role="button"]');
+          if (dateIcon && !dateIcon.dataset.listenerAttached) {
+             dateIcon.addEventListener('click', function() {
+               $(datepickerInput).datepicker('show');
+             });
+             dateIcon.dataset.listenerAttached = 'true';
+          }
+        }
+        
+        if (options.func === "loadAddNewView") {
+          typeof options.params === "undefined" ? cb() : cb(options.params);
+          loadingEnd();
+        } else {
+          typeof options.params === "undefined" ? cb() : cb(options.params);
+        }
+        
+      }).withFailureHandler(function(error) {
+        onFailure(error);
+        loadingEnd();
+      })[options.func]();
+    }
+
+    function loadingStart() {
+      document.getElementById("loading").classList.remove("invisible");
+    }
+
+    function loadingEnd() {
+      document.getElementById("loading").classList.add("invisible");
+    }
+
+    function setSearchDataforAllPending(){
+      google.script.run.withSuccessHandler(function(dataReturned){
+        var searchInput = document.getElementById("searchName")?.value.toString().toLowerCase() || ""; 
+        var taskInput = document.getElementById("searchTask")?.value.toString().toLowerCase() || "";
+
+        data = dataReturned.slice();
+        var searchResultsBox = document.getElementById("searchResults");
+        var templateBox = document.getElementById("rowTemplate");
+        var noResultsMessage = document.getElementById('no-results-message');
+        
+        if (!searchResultsBox || !templateBox || !noResultsMessage) {
+          console.error("Required elements for setSearchDataforAllPending not found.");
+          loadingEnd();
+          return;
+        }
+        
+        var template = templateBox.content;
+        searchResultsBox.innerHTML = "";
+
+        if (data.length < 1) {
+          noResultsMessage.classList.remove("invisible");
+        } else {
+          noResultsMessage.classList.add("invisible");
+        }
+
+        data.forEach(function(r){
+          var tr = template.cloneNode(true);
+          var revise = tr.querySelector(".revise-button");
+          var doneButtonContainer = tr.querySelector(".button-container");
+          
+          tr.querySelector(".taskID").textContent = r[0];
+          tr.querySelector(".doerName").textContent = r[1];
+          tr.querySelector(".number").textContent = r[4] || '';
+          tr.querySelector(".task").textContent = r[2];
+          tr.querySelector(".planned_date").textContent = r[3];
+          
+          if (revise) revise.dataset.taskid = r[0];
+          
+          if (doneButtonContainer) {
+            const initialDoneButton = doneButtonContainer.querySelector(".done-button");
+            if (initialDoneButton) initialDoneButton.dataset.taskid = r[0];
+          }
+
+          searchResultsBox.appendChild(tr);
+        });
+        
+        searchResultsBox.querySelectorAll('.mdc-button').forEach(button => mdc.ripple.MDCRipple.attachTo(button));
+
+        loadingEnd();
+      }).withFailureHandler(function(error) {
+        onFailure(error);
+        loadingEnd();
+      }).fetchAllPendingData();
+    }
+
+    function setDataForSearch(){
+      google.script.run.withSuccessHandler(function(dataReturned){
+        var searchInput = document.getElementById("searchName")?.value.toString().toLowerCase() || ""; 
+        var taskInput = document.getElementById("searchTask")?.value.toString().toLowerCase() || "";
+
+        data = dataReturned.slice();
+        var searchResultsBox = document.getElementById("searchResults");
+        var templateBox = document.getElementById("rowTemplate");
+        var noResultsMessage = document.getElementById('no-results-message');
+
+        if (!searchResultsBox || !templateBox || !noResultsMessage) {
+          console.error("Required elements for setDataForSearch not found.");
+          loadingEnd();
+          return;
+        }
+        
+        var template = templateBox.content;
+        searchResultsBox.innerHTML = "";
+
+        if (data.length < 1) {
+          noResultsMessage.classList.remove("invisible");
+        } else {
+          noResultsMessage.classList.add("invisible");
+        }
+
+        data.forEach(function(r){
+          var tr = template.cloneNode(true);
+          var revise = tr.querySelector(".revise-button");
+          var doneButtonContainer = tr.querySelector(".button-container");
+          
+          tr.querySelector(".taskID").textContent = r[0];
+          tr.querySelector(".doerName").textContent = r[1];
+          tr.querySelector(".number").textContent = r[4] || '';
+          tr.querySelector(".task").textContent = r[2];
+          tr.querySelector(".planned_date").textContent = r[3];
+
+          if (revise) revise.dataset.taskid = r[0];
+          
+          if (doneButtonContainer) {
+            const initialDoneButton = doneButtonContainer.querySelector(".done-button");
+            if (initialDoneButton) initialDoneButton.dataset.taskid = r[0];
+          }
+          
+          searchResultsBox.appendChild(tr);
+        });
+        
+        searchResultsBox.querySelectorAll('.mdc-button').forEach(button => mdc.ripple.MDCRipple.attachTo(button));
+        
+        loadingEnd();
+      }).withFailureHandler(function(error) {
+        onFailure(error);
+        loadingEnd();
+      }).fetchRelevantData();
+    }
+
+    function search(){
+      var searchInput = document.getElementById("searchName")?.value.toString().toLowerCase() || ""; 
+      var taskInput = document.getElementById("searchTask")?.value.toString().toLowerCase() || "";
+      
+      var resultsArray = data.filter(function(r){
+        var dataName = r[1]?.toString().toLowerCase() || "";
+        var dataTask = r[2]?.toString().toLowerCase() || "";
+        var dataNumber = r[4]?.toString().toLowerCase() || "";
+        var dataEmail = r[5]?.toString().toLowerCase() || "";
+
+        return (searchInput === "" || dataName.includes(searchInput) || dataNumber.includes(searchInput) || dataEmail.includes(searchInput)) && 
+               (taskInput === "" || dataTask.includes(taskInput));
+      });
+
+      var searchResultsBox = document.getElementById("searchResults");
+      var templateBox = document.getElementById("rowTemplate");
+      var noResultsMessage = document.getElementById('no-results-message');
+
+      if (!searchResultsBox || !templateBox || !noResultsMessage) {
+          console.error("Required elements for search not found.");
+          return;
+      }
+      
+      var template = templateBox.content;
+      searchResultsBox.innerHTML = "";
+
+      resultsArray.forEach(function(r){
+        var tr = template.cloneNode(true);
+        var revise = tr.querySelector(".revise-button");
+        var doneButtonContainer = tr.querySelector(".button-container");
+
+        tr.querySelector(".taskID").textContent = r[0];
+        tr.querySelector(".doerName").textContent = r[1];
+        tr.querySelector(".task").textContent = r[2];
+        tr.querySelector(".planned_date").textContent = r[3];
+        tr.querySelector(".number").textContent = r[4] || '';
+
+        if (revise) revise.dataset.taskid = r[0];
+
+        if (doneButtonContainer) {
+            const initialDoneButton = doneButtonContainer.querySelector(".done-button");
+            if (initialDoneButton) initialDoneButton.dataset.taskid = r[0];
+        }
+        searchResultsBox.appendChild(tr);
+      });
+
+      if (resultsArray.length < 1) {
+        noResultsMessage.classList.remove("invisible");
+      } else {
+        noResultsMessage.classList.add("invisible");
+      }
+      
+      searchResultsBox.querySelectorAll('.mdc-button').forEach(button => mdc.ripple.MDCRipple.attachTo(button));
+    }
+
+    function reviseTheTask(returnTo) {
+      loadingStart();
+      var taskDetails = {};
+      var idElement = document.getElementById("id");
+      var dateElement = document.getElementById("planned_date");
+      
+      if (!idElement || !dateElement) {
+          console.error("Revise form elements not found!");
+          alert("An error occurred processing the revise request.");
+          loadingEnd();
+          return;
+      }
+      
+      taskDetails.id = idElement.value;
+      taskDetails.pl = dateElement.value;
+
+      if (!taskDetails.pl || !taskDetails.id) {
+        loadingEnd();
+        alert("Please enter all the details");
+      } else {
+        google.script.run.withSuccessHandler(function(){
+          if (returnTo === "loadAllPendingView") {
+            loadAllPendingView();
+          } else {
+            loadFView();
+          }
+        }).withFailureHandler(function(error) {
+            onFailure(error);
+            loadingEnd();
+        }).addNext(taskDetails);
+      }
+    }
+
+    function addTask(button){
+      var taskInfo = {}
+      var nameElement = document.getElementById("name");
+      var taskElement = document.getElementById("task");
+      var dateElement = document.getElementById("planned_date");
+      var formElement = document.getElementById("task-form");
+      var successMessage = document.getElementById("success-message");
+
+      if (!nameElement || !taskElement || !dateElement || !formElement || !successMessage) {
+        console.error("Form elements not found!");
+        alert("An error occurred. Could not find form elements.");
+        if(button) button.disabled = false;
+        return;
+      }
+
+      taskInfo.name = nameElement.value;
+      taskInfo.task = taskElement.value;
+      taskInfo.fdate = dateElement.value;
+
+      if (!taskInfo.name || !taskInfo.task || !taskInfo.fdate){
+          alert("Please fill all the details.")
+          if(button) button.disabled = false;
+      } else {
+          loadingStart();
+          google.script.run.withSuccessHandler(function(){
+              formElement.reset();
+              
+              formElement.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+                 try {
+                    const mdcTextFieldInstance = mdc.textField.MDCTextField.attachTo(textField);
+                    if (mdcTextFieldInstance && mdcTextFieldInstance.value === '') { 
+                        const label = mdcTextFieldInstance.root.querySelector('.mdc-floating-label');
+                        if (label) {
+                            label.classList.remove('mdc-floating-label--float-above');
+                        }
+                    }
+                 } catch (e) {
+                 }
+              });
+
+              try {
+                const snackbar = mdc.snackbar.MDCSnackbar.attachTo(successMessage);
+                if (snackbar) snackbar.open();
+              } catch(e) {
+              }
+              
+              loadingEnd();
+              
+              if(button) button.disabled = false;
+          }).withFailureHandler(function(error){
+              onFailure(error);
+              loadingEnd();
+              if(button) button.disabled = false;
+          }).addNew(taskInfo);
+      }
+    }
+
+    function completeTask(id, returnTo) {
+      loadingStart();
+      google.script.run.withSuccessHandler(function(r){
+        if (returnTo === "loadAllPendingView") {
+          loadAllPendingView();
+        } else {
+          loadFView();
+        }
+      }).withFailureHandler(function(error) {
+        onFailure(error);
+        loadingEnd();
+      }).taskComplete(id);
+    }
+
+    function displayConfirmation(button){
+      var taskID = button.dataset.taskid;
+      var confirmButton = button.parentElement.querySelector(".confirm-button");
+      var confirmButton2 = button.parentElement.querySelector(".confirm-button2");
+      
+      if (!confirmButton && !confirmButton2) {
+        console.error("Confirm button not found for task ID:", taskID);
+        return;
+      }
+
+      button.classList.add("d-none");
+
+      if (confirmButton) {
+          confirmButton.classList.remove("d-none");
+          confirmButton.dataset.taskid = taskID;
+      } else if (confirmButton2) {
+          confirmButton2.classList.remove("d-none");
+          confirmButton2.dataset.taskid = taskID; 
+      }
+    }
+
+    function afterReviseLoads(params){
+      loadingStart();
+      google.script.run.withSuccessHandler(function(r){
+        const nameInput = document.getElementById("name");
+        const taskInput = document.getElementById("task");
+        const idInput = document.getElementById("id");
+        const dateInput = document.getElementById("planned_date");
+        
+        if (nameInput) nameInput.value = r.name;
+        if (taskInput) taskInput.value = r.task;
+        if (idInput) idInput.value = r.taskid;
+        if (dateInput) dateInput.value = r.fdate;
+
+        document.querySelectorAll('.mdc-text-field').forEach(function(textField) {
+           try {
+             const mdcTextFieldInstance = mdc.textField.MDCTextField.attachTo(textField);
+             if (mdcTextFieldInstance && mdcTextFieldInstance.value) { 
+                 const label = mdcTextFieldInstance.root.querySelector('.mdc-floating-label');
+                 if (label) {
+                     label.classList.add('mdc-floating-label--float-above');
+                 }
+             }
+           } catch (e) {
+           }
+        });
+        
+        if (dateInput && $(dateInput).data('datepicker')) {
+          $(dateInput).datepicker('update');
+        } else if (dateInput) {
+            $(dateInput).datepicker({
+              container: 'body',
+              orientation: 'bottom auto',
+              format: 'dd/mm/yyyy',
+              autoclose: true,
+              todayHighlight: true
+            });
+        }
+
+        loadingEnd();
+      }).withFailureHandler(function(error) {
+          onFailure(error);
+          loadingEnd();
+      }).getInfoByTaskID(params.taskID);
+    }
+
+    document.getElementById("follow-up-link").addEventListener("click",loadFView)
+    document.getElementById("add-new-task-link").addEventListener("click",loadAddView)
+    document.getElementById("all-pending-tasks").addEventListener("click",loadAllPendingView)
+
+    
+  function clickEventHandler(e){
+    if (e.target.matches("#add-task-button") || e.target.closest("#add-task-button")){
+        e.preventDefault();
+        const addButton = e.target.closest("#add-task-button");
+        if (addButton) {
+          addButton.disabled = true;
+          addTask(addButton);
+        }
+    }
+    if (e.target.matches("#send-reminders-button") || e.target.closest("#send-reminders-button")){
+        const reminderButton = e.target.closest("#send-reminders-button");
+        if (reminderButton) {
+          reminderButton.disabled = true;
+          loadingStart();
+          
+          google.script.run
+            .withSuccessHandler(function(result) {
+              loadingEnd();
+              
+              let message = "";
+              if (result.emailsSent > 0) {
+                message = `Successfully sent ${result.emailsSent} reminder email(s)`;
+              } else {
+                message = "No reminders sent. There are no tasks due tomorrow.";
+              }
+              
+              const snackbarContainer = document.createElement('div');
+              snackbarContainer.className = 'mdc-snackbar';
+              snackbarContainer.innerHTML = `
+                <div class="mdc-snackbar__surface" role="status" aria-relevant="additions">
+                  <div class="mdc-snackbar__label" aria-atomic="false">
+                    ${message}
+                  </div>
+                  <div class="mdc-snackbar__actions" aria-atomic="true">
+                    <button type="button" class="mdc-button mdc-snackbar__action">
+                      <div class="mdc-button__ripple"></div>
+                      <span class="mdc-button__label">OK</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(snackbarContainer);
+              const snackbar = new mdc.snackbar.MDCSnackbar(snackbarContainer);
+              snackbar.open();
+              
+              snackbar.listen('MDCSnackbar:closed', function() {
+                document.body.removeChild(snackbarContainer);
+              });
+              
+              reminderButton.disabled = false;
+            })
+            .withFailureHandler(function(error) {
+              loadingEnd();
+              console.error("Error sending reminders:", error);
+              alert("Error: " + (error.message || "Could not send reminders."));
+              reminderButton.disabled = false;
+            })
+            .manualSendReminders();
+        }
+    }
+    if (e.target.matches(".revise-button") || e.target.closest(".revise-button")){
+      const reviseButton = e.target.closest(".revise-button");
+      if (reviseButton && reviseButton.dataset.taskid) {
+        loadView({func : "loadReviseView", callback:afterReviseLoads, params : {taskID:reviseButton.dataset.taskid}});
+      }
+    }
+    if (e.target.matches("#revise-task-button") || e.target.closest("#revise-task-button")){
+      const reviseSubmitButton = e.target.closest("#revise-task-button");
+      if(reviseSubmitButton) reviseSubmitButton.disabled = true;
+      reviseTheTask("loadFView");
+    }
+    if (e.target.matches(".done-button") || e.target.closest(".done-button")){
+     displayConfirmation(e.target.closest(".done-button"));
+    }
+    if (e.target.matches(".confirm-button") || e.target.closest(".confirm-button")){
+      const confirmButton = e.target.closest(".confirm-button");
+      if (confirmButton && confirmButton.dataset.taskid) {
+        completeTask(confirmButton.dataset.taskid, "loadFView"); 
+      }
+    }
+    if (e.target.matches(".confirm-button2") || e.target.closest(".confirm-button2")){
+      const confirmButton2 = e.target.closest(".confirm-button2");
+       if (confirmButton2 && confirmButton2.dataset.taskid) {
+        completeTask(confirmButton2.dataset.taskid, "loadAllPendingView");
+       }
+    }
+  }
+
+
+    function inputEventHandler(e){
+      if (e.target.matches("#searchName") || e.target.matches("#searchTask")){
+        search()
+      }
+    }
+    document.getElementById("app").addEventListener("input",inputEventHandler)
+
+    document.getElementById("app").addEventListener("click",clickEventHandler)
+
+    document.addEventListener("DOMContentLoaded",loadFView)
+    
+
+</script>
+</body>
+</html>

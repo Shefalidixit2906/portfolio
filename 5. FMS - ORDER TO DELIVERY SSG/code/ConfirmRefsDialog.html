@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 16px 18px;
+        color: #222;
+      }
+      h2 {
+        margin: 0 0 6px 0;
+        font-size: 16px;
+        color: #1a73e8;
+      }
+      p.intro {
+        margin: 0 0 14px 0;
+        color: #555;
+        line-height: 1.4;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      .field label.fieldLabel {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .hint {
+        color: #666;
+        font-size: 11px;
+        margin-top: 3px;
+        line-height: 1.35;
+      }
+      input[type="text"], input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-family: 'Consolas', 'Menlo', monospace;
+      }
+      .radioGroup {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+      .radioGroup label {
+        flex: 1;
+        min-width: 100px;
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        background: #fff;
+        text-align: center;
+        font-size: 12px;
+        user-select: none;
+      }
+      .radioGroup label.on {
+        background: #e8f0fe;
+        border-color: #1a73e8;
+        font-weight: bold;
+      }
+      .radioGroup input { display: none; }
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+      }
+      .actions .left { color: #666; font-size: 11px; }
+      .actions .right { display: flex; gap: 8px; }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      button.primary:disabled { opacity: 0.6; cursor: wait; }
+      .error {
+        color: #b00020;
+        font-size: 12px;
+        margin: 6px 0 0 0;
+        display: none;
+      }
+      .error.show { display: block; }
+      .auto-badge {
+        display: inline-block;
+        font-size: 10px;
+        background: #e6f4ea;
+        color: #137333;
+        border: 1px solid #b7e1cd;
+        padding: 1px 6px;
+        border-radius: 2px;
+        margin-left: 6px;
+        vertical-align: 2px;
+      }
+      .empty-badge {
+        display: inline-block;
+        font-size: 10px;
+        background: #fff8e1;
+        color: #8a6d00;
+        border: 1px solid #f4c952;
+        padding: 1px 6px;
+        border-radius: 2px;
+        margin-left: 6px;
+        vertical-align: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2><?!= dialogTitle ?></h2>
+    <p class="intro"><?!= intro ?></p>
+
+    <div id="fields"></div>
+
+    <div class="error" id="errBox"></div>
+
+    <div class="actions">
+      <div class="left">Edit any auto-detected value before applying.</div>
+      <div class="right">
+        <button onclick="google.script.host.close()">Cancel</button>
+        <button class="primary" id="applyBtn" onclick="onApply()">Apply</button>
+      </div>
+    </div>
+
+    <script>
+      var fields = <?!= JSON.stringify(fields) ?>;
+      var opType = <?!= JSON.stringify(opType) ?>;
+      var ctx = <?!= JSON.stringify(ctx) ?>;
+
+      function el(tag, attrs, children) {
+        var e = document.createElement(tag);
+        if (attrs) for (var k in attrs) {
+          if (k === 'class') e.className = attrs[k];
+          else if (k === 'html') e.innerHTML = attrs[k];
+          else e.setAttribute(k, attrs[k]);
+        }
+        if (children) for (var i = 0; i < children.length; i++) {
+          if (typeof children[i] === 'string') e.appendChild(document.createTextNode(children[i]));
+          else e.appendChild(children[i]);
+        }
+        return e;
+      }
+
+      function renderField(f) {
+        var wrap = el('div', { class: 'field', 'data-name': f.name });
+
+        var labelLine = el('label', { class: 'fieldLabel' });
+        labelLine.appendChild(document.createTextNode(f.label));
+        if (f.value && f.isCellRef) {
+          var badge = el('span', { class: 'auto-badge' });
+          badge.textContent = 'auto-detected';
+          labelLine.appendChild(badge);
+        } else if (f.isCellRef && !f.value) {
+          var emptyBadge = el('span', { class: 'empty-badge' });
+          emptyBadge.textContent = 'pick manually';
+          labelLine.appendChild(emptyBadge);
+        }
+        wrap.appendChild(labelLine);
+
+        if (f.kind === 'radio') {
+          var group = el('div', { class: 'radioGroup', id: 'radio_' + f.name });
+          (f.options || []).forEach(function (opt, idx) {
+            var lab = el('label', { 'data-value': opt.value });
+            if (idx === 0) lab.className = 'on';
+            var inp = el('input', { type: 'radio', name: 'radio_' + f.name, value: opt.value });
+            if (idx === 0) inp.checked = true;
+            lab.appendChild(inp);
+            lab.appendChild(document.createTextNode(' ' + opt.label));
+            group.appendChild(lab);
+          });
+          if (f.allowCustom) {
+            var lab2 = el('label', { 'data-value': 'custom' });
+            var inp2 = el('input', { type: 'radio', name: 'radio_' + f.name, value: 'custom' });
+            lab2.appendChild(inp2);
+            lab2.appendChild(document.createTextNode(' Custom'));
+            group.appendChild(lab2);
+          }
+          wrap.appendChild(group);
+
+          if (f.allowCustom) {
+            var customInp = el('input', {
+              type: 'number',
+              id: 'custom_' + f.name,
+              value: '3',
+              min: '0',
+              step: '1',
+              style: 'margin-top:6px; display:none;'
+            });
+            wrap.appendChild(customInp);
+          }
+        } else {
+          var input = el('input', {
+            type: 'text',
+            id: 'fld_' + f.name,
+            value: f.value || '',
+            placeholder: f.isCellRef ? 'e.g. A7 or F$5' : ''
+          });
+          wrap.appendChild(input);
+        }
+
+        if (f.hint) {
+          wrap.appendChild(el('div', { class: 'hint', html: f.hint }));
+        }
+        return wrap;
+      }
+
+      function wireRadioGroups() {
+        fields.forEach(function (f) {
+          if (f.kind !== 'radio') return;
+          var groupId = 'radio_' + f.name;
+          var labels = document.querySelectorAll('#' + groupId + ' label');
+          for (var i = 0; i < labels.length; i++) {
+            (function (lbl) {
+              lbl.addEventListener('click', function () {
+                setTimeout(function () {
+                  var ll = document.querySelectorAll('#' + groupId + ' label');
+                  for (var j = 0; j < ll.length; j++) {
+                    var inp = ll[j].querySelector('input');
+                    if (inp.checked) ll[j].classList.add('on');
+                    else ll[j].classList.remove('on');
+                  }
+                  if (f.allowCustom) {
+                    var v = getRadio('radio_' + f.name);
+                    var custom = document.getElementById('custom_' + f.name);
+                    if (custom) custom.style.display = (v === 'custom') ? 'block' : 'none';
+                  }
+                }, 0);
+              });
+            })(labels[i]);
+          }
+        });
+      }
+
+      function getRadio(name) {
+        var els = document.getElementsByName(name);
+        for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;
+        return '';
+      }
+
+      function showError(msg) {
+        var box = document.getElementById('errBox');
+        box.textContent = msg;
+        box.classList.add('show');
+      }
+      function clearError() {
+        var box = document.getElementById('errBox');
+        box.textContent = '';
+        box.classList.remove('show');
+      }
+
+      function isLikelyCellRef(s) {
+        return /^[A-Za-z]+\$?\d+$/.test(String(s || '').trim()) ||
+               /^\$?[A-Za-z]+\$?\d+$/.test(String(s || '').trim());
+      }
+
+      function onApply() {
+        clearError();
+        var payload = { ctx: ctx };
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          var val;
+          if (f.kind === 'radio') {
+            val = getRadio('radio_' + f.name);
+            if (val === 'custom') {
+              var c = document.getElementById('custom_' + f.name);
+              val = c ? c.value : '';
+            }
+          } else {
+            var inp = document.getElementById('fld_' + f.name);
+            val = inp ? inp.value.trim() : '';
+          }
+
+          if (f.isCellRef && val && !isLikelyCellRef(val)) {
+            return showError('"' + f.label + '" does not look like a cell reference. Examples: A7, F$5, H7. You entered: ' + val);
+          }
+          if (f.isCellRef && !val) {
+            return showError('"' + f.label + '" is required.');
+          }
+          payload[f.name] = val;
+        }
+
+        var btn = document.getElementById('applyBtn');
+        btn.disabled = true;
+        btn.textContent = 'Applying…';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            google.script.host.close();
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = 'Apply';
+            showError(err.message || String(err));
+          })
+          .executeOperation(opType, payload);
+      }
+
+      // Render all fields, then wire interactions
+      var container = document.getElementById('fields');
+      fields.forEach(function (f) { container.appendChild(renderField(f)); });
+      wireRadioGroups();
+    </script>
+  </body>
+</html>

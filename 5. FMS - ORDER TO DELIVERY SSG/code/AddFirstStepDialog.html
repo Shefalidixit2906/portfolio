@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 16px 18px;
+        color: #222;
+      }
+      h2 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        color: #1a73e8;
+      }
+      p.intro {
+        margin: 0 0 14px 0;
+        color: #555;
+        line-height: 1.4;
+      }
+      fieldset {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 10px 12px;
+        margin: 0 0 12px 0;
+      }
+      fieldset legend {
+        padding: 0 6px;
+        color: #1a73e8;
+        font-weight: bold;
+      }
+      .field { margin-bottom: 12px; }
+      .field label.fieldLabel {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .hint {
+        color: #666;
+        font-size: 11px;
+        margin-top: 3px;
+        line-height: 1.35;
+      }
+      input[type="text"], input[type="number"], select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      .row { display: flex; gap: 14px; }
+      .row > .field { flex: 1; }
+      #formFieldsList { margin-top: 4px; }
+      .ff-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .ff-row input.ff-label { flex: 2; }
+      .ff-row select.ff-type { flex: 1; }
+      .ff-row .ff-rm {
+        background: transparent;
+        border: 1px solid #ccc;
+        color: #666;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 8px;
+        height: 28px;
+        border-radius: 3px;
+      }
+      .ff-row .ff-rm:hover { background: #fdecea; color: #b00020; border-color: #b00020; }
+      .ff-add {
+        background: #fff;
+        border: 1px dashed #1a73e8;
+        color: #1a73e8;
+        padding: 6px 12px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      button.primary:disabled { opacity: 0.6; cursor: wait; }
+      .error {
+        color: #b00020;
+        font-size: 12px;
+        margin: 6px 0;
+        display: none;
+      }
+      .error.show { display: block; }
+      .info-banner {
+        background: #fff8e1;
+        border: 1px solid #f4c952;
+        border-radius: 3px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: #4d3800;
+        margin-bottom: 14px;
+      }
+      .when-note {
+        background: #f7f9ff;
+        border-left: 3px solid #1a73e8;
+        padding: 8px 10px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #1a3a78;
+        line-height: 1.4;
+      }
+      .when-note strong { color: #1a73e8; }
+    </style>
+  </head>
+  <body>
+    <h2>Add First Step (creates the entry form)</h2>
+    <p class="intro">
+      One dialog. Creates a Google Form for capturing new process entries,
+      links it to this spreadsheet, writes the form-data columns and INDEX
+      formulas, and lays out the entry-event header (Step 1 in the FMS).
+    </p>
+    <div class="info-banner">
+      <strong>Heads up:</strong> Run "Setup (First Time)" first if you
+      haven't yet. This wizard will be refused if office hours / working
+      days aren't configured.
+    </div>
+
+    <fieldset>
+      <legend>Process</legend>
+      <div class="field">
+        <label class="fieldLabel" for="processName">Process name</label>
+        <input type="text" id="processName" placeholder="e.g. Purchase Order" />
+        <div class="hint">Used in the form title. e.g. "Purchase Order — FMS Entry Form".</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Form fields (info captured at process start)</legend>
+      <div id="formFieldsList"></div>
+      <button class="ff-add" type="button" onclick="addFormFieldRow()">+ Add field</button>
+      <div class="hint" style="margin-top:6px;">
+        Keep it minimal. Just enough to identify each item: e.g. PO Number, Vendor Name, Quantity.
+        Don't add reference data (phone numbers, GST, full addresses) — that belongs elsewhere.
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>First step (the entry event)</legend>
+      <div class="field">
+        <label class="fieldLabel" for="stepName">Step name</label>
+        <input type="text" id="stepName" placeholder="e.g. Generate PO" />
+        <div class="hint">
+          The first step is whatever triggers a new process instance. Examples:
+          "Generate PO", "Receive Order Inquiry", "Patient Walks In", "Hire Request Raised".
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label class="fieldLabel" for="who">Who (one person/role)</label>
+          <input type="text" id="who" placeholder="e.g. Purchase Assistant" />
+          <div class="hint">The person who fills the form when the process starts.</div>
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="how">How</label>
+          <input type="text" id="how" placeholder="e.g. Tally" />
+          <div class="hint">Where they get the info from (the source system or method).</div>
+        </div>
+      </div>
+
+      <div class="when-note">
+        <strong>When:</strong> Whenever Needed.<br>
+        The first step is always the entry event — it has no deadline of its own.
+        The form's submission timestamp (column A) acts as its Actual time, and
+        every subsequent step's timing flows forward from there.
+      </div>
+    </fieldset>
+
+    <div class="error" id="errBox"></div>
+
+    <div class="actions">
+      <button onclick="google.script.host.close()">Cancel</button>
+      <button class="primary" id="saveBtn" onclick="onSave()">Create Form &amp; Entry Event</button>
+    </div>
+
+    <script>
+      // ---------- Form fields list ----------
+      var formFields = [
+        { label: 'PO Number', type: 'text' },
+        { label: 'Vendor Name', type: 'text' },
+        { label: 'Quantity', type: 'number' }
+      ];
+
+      function renderFormFields() {
+        var container = document.getElementById('formFieldsList');
+        container.innerHTML = '';
+        formFields.forEach(function (ff, idx) {
+          var row = document.createElement('div');
+          row.className = 'ff-row';
+
+          var labelInput = document.createElement('input');
+          labelInput.type = 'text';
+          labelInput.className = 'ff-label';
+          labelInput.placeholder = 'Field name (e.g. PO Number)';
+          labelInput.value = ff.label;
+          labelInput.oninput = function () { ff.label = labelInput.value; };
+
+          var typeSelect = document.createElement('select');
+          typeSelect.className = 'ff-type';
+          [
+            { value: 'text', label: 'Text' },
+            { value: 'number', label: 'Number' },
+            { value: 'date', label: 'Date' }
+          ].forEach(function (o) {
+            var opt = document.createElement('option');
+            opt.value = o.value; opt.textContent = o.label;
+            if (o.value === ff.type) opt.selected = true;
+            typeSelect.appendChild(opt);
+          });
+          typeSelect.onchange = function () { ff.type = typeSelect.value; };
+
+          var rmBtn = document.createElement('button');
+          rmBtn.type = 'button';
+          rmBtn.className = 'ff-rm';
+          rmBtn.textContent = '×';
+          rmBtn.title = 'Remove this field';
+          rmBtn.onclick = function () {
+            formFields.splice(idx, 1);
+            renderFormFields();
+          };
+
+          row.appendChild(labelInput);
+          row.appendChild(typeSelect);
+          row.appendChild(rmBtn);
+          container.appendChild(row);
+        });
+      }
+
+      function addFormFieldRow() {
+        formFields.push({ label: '', type: 'text' });
+        renderFormFields();
+        var inputs = document.querySelectorAll('#formFieldsList .ff-label');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }
+
+      // ---------- Validation + submit ----------
+      function showError(msg) {
+        var box = document.getElementById('errBox');
+        box.textContent = msg;
+        box.classList.add('show');
+      }
+      function clearError() {
+        var box = document.getElementById('errBox');
+        box.textContent = '';
+        box.classList.remove('show');
+      }
+
+      function onSave() {
+        clearError();
+
+        var processName = document.getElementById('processName').value.trim();
+        if (!processName) return showError('Process name is required.');
+
+        var validFields = formFields.filter(function (ff) {
+          return ff.label && ff.label.trim();
+        });
+        if (validFields.length === 0) return showError('Add at least one form field.');
+
+        var stepName = document.getElementById('stepName').value.trim();
+        if (!stepName) return showError('First step name is required (e.g. "Generate PO").');
+
+        var payload = {
+          processName: processName,
+          formFields: validFields.map(function (ff) {
+            return { label: ff.label.trim(), type: ff.type || 'text' };
+          }),
+          stepName: stepName,
+          who: document.getElementById('who').value.trim(),
+          how: document.getElementById('how').value.trim()
+        };
+
+        var btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating form…';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.textContent = 'Done!';
+            setTimeout(function () { google.script.host.close(); }, 600);
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = 'Create Form & Entry Event';
+            showError(err.message || String(err));
+          })
+          .addFirstStepWizardSave(payload);
+      }
+
+      // ---------- Init ----------
+      renderFormFields();
+    </script>
+  </body>
+</html>

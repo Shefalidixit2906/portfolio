@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nathji Agencies — Sales Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f7;--surface:#fff;--border:#e2e5ec;
+  --txt:#111827;--muted:#6b7280;--dim:#9ca3af;
+  --amber:#d97706;--amber-l:#fef3c7;--amber-d:#92400e;
+  --blue:#2563eb;--blue-l:#dbeafe;--blue-d:#1e40af;
+  --teal:#0d9488;--teal-l:#ccfbf1;--teal-d:#0f766e;
+  --rose:#e11d48;--rose-l:#ffe4e6;--rose-d:#9f1239;
+  --violet:#7c3aed;--violet-l:#ede9fe;--violet-d:#5b21b6;
+  --green:#16a34a;--green-l:#dcfce7;--green-d:#15803d;
+  --slate:#475569;--slate-l:#f1f5f9;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
+
+/* HEADER */
+.hdr{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{width:38px;height:38px;background:linear-gradient(135deg,#d97706,#f97316);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#fff;letter-spacing:-.5px;flex-shrink:0}
+.hdr-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--txt)}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.badge{background:var(--amber-l);color:var(--amber-d);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.4px;border:1px solid #fcd34d}
+.badge-err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+/* FILTERS */
+.filters{background:#fff;border-bottom:1px solid var(--border);padding:12px 28px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.flbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.tab-grp{display:flex;gap:3px;background:var(--bg);padding:3px;border-radius:9px;border:1px solid var(--border)}
+.tab{padding:5px 13px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);border:none;background:transparent;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.tab.on{background:#fff;color:var(--amber-d);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.tab:hover:not(.on){background:rgba(0,0,0,.04);color:var(--txt)}
+select{background:#fff;border:1px solid var(--border);color:var(--txt);padding:6px 11px;border-radius:8px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;outline:none;font-weight:500}
+select:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(217,119,6,.15)}
+.month-checks{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.mc{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;cursor:pointer;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;user-select:none;transition:all .15s}
+.mc input{display:none}
+.mc.ck{background:var(--amber-l);border-color:var(--amber);color:var(--amber-d)}
+.mc:not(.ck){color:var(--muted)}
+.value-toggle{display:flex;gap:3px;background:var(--bg);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.vtab{padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;color:var(--muted);border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif}
+.vtab.on{background:#fff;color:var(--blue-d);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* MAIN */
+.main{padding:20px 28px;display:flex;flex-direction:column;gap:18px;max-width:1600px;margin:0 auto}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kpi::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kc,var(--amber));border-radius:2px 0 0 2px}
+.kpi-icon{font-size:20px;margin-bottom:8px;display:block}
+.kpi-val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;line-height:1;color:var(--txt)}
+.kpi-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi-delta{font-size:10px;margin-top:4px;font-weight:600}
+.kpi-delta.up{color:var(--green)}
+.kpi-delta.dn{color:var(--rose)}
+
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--txt);margin-bottom:2px}
+.card-sub{font-size:11px;color:var(--muted);margin-bottom:14px}
+
+/* EXEC ROW */
+.exec-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.exec-row{grid-template-columns:1fr}}
+
+/* EXEC PROFILES */
+.ep-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.ep{border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;background:#fff}
+.ep::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ec,var(--amber))}
+.ep.sel,.ep:hover{border-color:var(--ec,var(--amber));background:var(--el,var(--amber-l));box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.ep-name{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--ec);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.ep-val{font-size:17px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:var(--txt)}
+.ep-stat{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* HEATMAP */
+.hm-grid{display:grid;gap:3px}
+.hm-head{font-size:9px;font-weight:700;color:var(--muted);text-align:center;padding:3px 2px;text-transform:uppercase;letter-spacing:.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-exec{font-size:10px;font-weight:700;padding:3px 6px 3px 0;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-cell{border-radius:5px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700;cursor:default;transition:opacity .15s}
+.hm-cell:hover{opacity:.72}
+
+/* TOP LISTS */
+.top-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.top-row{grid-template-columns:1fr}}
+.rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.rank-item:last-child{border:none}
+.rank-num{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.rank-num.gold{background:#fef3c7;color:#92400e}
+.rank-num.silver{background:#f1f5f9;color:#475569}
+.rank-num.bronze{background:#fff7ed;color:#9a3412}
+.rank-num.other{background:var(--bg);color:var(--muted)}
+.rank-name{font-size:12px;font-weight:600;color:var(--txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.rank-val{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--txt);flex-shrink:0;text-align:right}
+.rank-val2{font-size:10px;color:var(--muted);text-align:right}
+.bar-wrap{margin-top:4px;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.bar-fill{height:4px;border-radius:2px;transition:width .4s}
+
+/* CAT SPARKLINES */
+.spark-row{display:grid;grid-template-columns:110px 1fr 65px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.spark-row:last-child{border:none}
+.spark-lbl{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spark-bars{display:flex;gap:2px;align-items:flex-end;height:32px}
+.spark-b{border-radius:2px 2px 0 0;min-width:5px;flex:1;cursor:default;transition:opacity .15s}
+.spark-b:hover{opacity:.65}
+.spark-ttl{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:var(--txt);text-align:right}
+
+/* DEALER TABLE — UPDATED */
+.dealer-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+
+/* Category header group colours */
+.th-shirts   { background:#fef3c7; color:#92400e; }
+.th-formal    { background:#ccfbf1; color:#0f766e; }
+.th-cotton    { background:#dbeafe; color:#1e40af; }
+.th-tshirts   { background:#fee2e2; color:#991b1b; }
+.th-travel    { background:#ede9fe; color:#5b21b6; }
+.th-jeans     { background:#fce7f3; color:#9d174d; }
+.th-winter    { background:#e0f2fe; color:#0369a1; }
+
+th{padding:9px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+th.cat-th{text-align:right;border-left:1px solid var(--border);padding:7px 8px;font-size:9px;letter-spacing:.4px}
+th.sorted{color:var(--amber-d)}
+td{padding:8px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+td.cat-td{text-align:right;border-left:1px solid #f3f4f6;font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--muted);padding:8px 8px}
+td.cat-td.has-val{color:var(--txt);font-weight:600}
+tr:hover td{background:#fffbeb}
+tr:last-child td{border:none}
+.dealer-nm{font-weight:700;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.srch{border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;width:200px;outline:none;color:var(--txt)}
+.srch:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(217,119,6,.12)}
+.pg-btn{background:#fff;border:1px solid var(--border);color:var(--txt);padding:5px 11px;border-radius:7px;cursor:pointer;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;transition:background .15s}
+.pg-btn:hover:not(:disabled){background:var(--amber-l);border-color:var(--amber);color:var(--amber-d)}
+.pg-btn:disabled{opacity:.35;cursor:default}
+.no-data{text-align:center;color:var(--muted);padding:32px;font-size:13px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .icon{font-size:40px;margin-bottom:12px}
+.empty-state h3{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px}
+.empty-state p{font-size:12px;line-height:1.6}
+
+/* MONTH GROWTH TABLE */
+.growth-table{width:100%;border-collapse:collapse;font-size:11px}
+.growth-table th{padding:7px 10px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border)}
+.growth-table th:first-child{text-align:left}
+.growth-table td{padding:7px 10px;border-bottom:1px solid #f9fafb;text-align:right;font-family:'Space Grotesk',sans-serif;font-size:11px}
+.growth-table td:first-child{text-align:left;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:var(--txt)}
+.growth-table tr:last-child td{border:none;font-weight:700}
+.gup{color:var(--green);font-size:10px;font-weight:700}
+.gdn{color:var(--rose);font-size:10px;font-weight:700}
+.gneutral{color:var(--muted);font-size:10px}
+</style>
+</head>
+<body>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA INJECTED BY APPS SCRIPT
+// ─────────────────────────────────────────────
+let RAW = {};
+try {
+  RAW = JSON.parse('<?= data ?>');
+} catch (err) {
+  console.error('Data parse error', err);
+  RAW = { records:[], execs:[], cats:[], months:[], ml:{}, error:'Data loading failed' };
+}
+
+RAW.records = Array.isArray(RAW.records) ? RAW.records : [];
+RAW.execs   = Array.isArray(RAW.execs)   ? RAW.execs   : [];
+RAW.cats    = Array.isArray(RAW.cats)    ? RAW.cats    : [];
+RAW.months  = Array.isArray(RAW.months)  ? RAW.months  : [];
+
+const EXEC_COLORS = {
+  'AJAY'        :{'c':'#2563eb','l':'#dbeafe'},
+  'ABHISHEK'    :{'c':'#0d9488','l':'#ccfbf1'},
+  'UMAKANT'     :{'c':'#d97706','l':'#fef3c7'},
+  'JEEVAN YADAV':{'c':'#7c3aed','l':'#ede9fe'},
+  'SANTOSH GARG':{'c':'#e11d48','l':'#ffe4e6'},
+  'SHEERY'      :{'c':'#db2777','l':'#fce7f3'},
+  'MAHIPAL SHEKHAWAT':{'c':'#0891b2','l':'#cffafe'},
+  'M.P.'        :{'c':'#94a3b8','l':'#84B314'},
+  'ODISHA'      :{'c':'#94a3b8','l':'#D916C4'},
+  'S.I.S'       :{'c':'#94a3b8','l':'#169BD9'},
+  'UTTRAKHAND'  :{'c':'#94a3b8','l':'#CFD916'},
+};
+
+const CAT_COLORS = {
+  'COTTON TROUSERS':'#2563eb',
+  'FORMAL TROUSERS':'#0d9488',
+  'JEANS'          :'#db2777',
+  'SHIRTS'         :'#d97706',
+  'T-SHIRTS'       :'#dc2626',
+  'TRAVEL PANTS'   :'#7c3aed',
+  'WINTER'         :'#0284c7'
+};
+
+const CAT_SHORT = {
+  'COTTON TROUSERS':'Cotton Tr.',
+  'FORMAL TROUSERS':'Formal Tr.',
+  'JEANS'          :'Jeans',
+  'SHIRTS'         :'Shirts',
+  'T-SHIRTS'       :'T-Shirts',
+  'TRAVEL PANTS'   :'Travel',
+  'WINTER'         :'Winter'
+};
+
+// Fixed category order for the dealer table columns
+const DEALER_CAT_ORDER = [
+  'SHIRTS',
+  'FORMAL TROUSERS',
+  'COTTON TROUSERS',
+  'T-SHIRTS',
+  'TRAVEL PANTS',
+  'JEANS',
+  'WINTER'
+];
+
+const DEALER_CAT_TH_CLASS = {
+  'SHIRTS'         :'th-shirts',
+  'FORMAL TROUSERS':'th-formal',
+  'COTTON TROUSERS':'th-cotton',
+  'T-SHIRTS'       :'th-tshirts',
+  'TRAVEL PANTS'   :'th-travel',
+  'JEANS'          :'th-jeans',
+  'WINTER'         :'th-winter'
+};
+
+const ML     = RAW.ml      || {};
+const MONTHS = Array.isArray(RAW.months) ? RAW.months : [];
+const CATS   = Array.isArray(RAW.cats)   ? RAW.cats   : [];
+const EXECS  = Array.isArray(RAW.execs)  ? RAW.execs  : [];
+
+if (!Array.isArray(RAW.records)) RAW.records = [];
+
+function getExecColor(e) {
+  for (const k of Object.keys(EXEC_COLORS)) {
+    if (e && e.includes(k.split(' ')[0])) return EXEC_COLORS[k];
+  }
+  return {c:'#94a3b8', l:'#f1f5f9'};
+}
+</script>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">NA</div>
+    <div>
+      <div class="hdr-title">Nathji Agencies</div>
+      <div class="hdr-sub">Sales Dashboard · 2025</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span style="font-size:11px;color:var(--muted)"><b id="rec-count">—</b> transactions</span>
+    <span class="badge" id="status-badge">LIVE DATA</span>
+    <button id="refresh-btn" onclick="refreshData()" style="background:var(--amber-l);border:1px solid var(--amber);color:var(--amber-d);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <span class="flbl">Period</span>
+  <div class="tab-grp" id="period-tabs">
+    <button class="tab on" data-p="all">All Months</button>
+    <button class="tab" data-p="3">Last 3M</button>
+    <button class="tab" data-p="1">Single Month</button>
+    <button class="tab" data-p="custom">Custom</button>
+  </div>
+  <div id="month-sel-wrap" style="display:none">
+    <select id="month-sel"></select>
+  </div>
+  <div id="custom-wrap" style="display:none" class="month-checks"></div>
+
+  <span class="flbl" style="margin-left:4px">Executive</span>
+  <select id="exec-sel"><option value="ALL">All Executives</option></select>
+
+  <span class="flbl" style="margin-left:4px">Category</span>
+  <select id="cat-sel"><option value="ALL">All Categories</option></select>
+
+  <span class="flbl" style="margin-left:4px">Show</span>
+  <div class="value-toggle">
+    <button class="vtab on" data-v="qty">Quantity</button>
+    <button class="vtab" data-v="amt">Amount (₹)</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="kpi" style="grid-column:1/-1"><div class="no-data">Loading dashboard…</div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Monthly Trend</div>
+      <div class="card-sub" id="trend-sub">Units sold per month by executive</div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category Mix</div>
+      <div class="card-sub" id="cat-sub">Share by product category</div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="cat-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXEC + HEATMAP -->
+  <div class="exec-row">
+    <div class="card">
+      <div class="card-title">Executive Performance</div>
+      <div class="card-sub">Click a card to filter the whole dashboard</div>
+      <div class="ep-grid" id="ep-grid"></div>
+      <div style="position:relative;width:100%;height:150px">
+        <canvas id="exec-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category × Executive Heatmap</div>
+      <div class="card-sub" id="heatmap-sub">Unit intensity by exec &amp; category</div>
+      <div id="heatmap"></div>
+    </div>
+  </div>
+
+  <!-- MONTH-WISE SUMMARY TABLE -->
+  <div class="card">
+    <div class="card-title">Month-wise Summary</div>
+    <div class="card-sub">Quantity &amp; amount per month with growth</div>
+    <div style="overflow-x:auto">
+      <table class="growth-table" id="month-table"></table>
+    </div>
+  </div>
+
+  <!-- TOP LISTS -->
+  <div class="top-row">
+    <div class="card">
+      <div class="card-title">Top Dealers</div>
+      <div class="card-sub" id="top-d-sub">By units sold</div>
+      <div id="top-dealers"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Executives</div>
+      <div class="card-sub">By units sold</div>
+      <div id="top-execs"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category Sparklines</div>
+      <div class="card-sub">Month-by-month trend</div>
+      <div id="cat-sparks"></div>
+    </div>
+  </div>
+
+  <!-- DEALER TABLE — UPDATED -->
+  <div class="dealer-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="card-title">Dealer-wise Breakdown</div>
+        <div class="card-sub" id="dealer-sub">All dealers</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="srch" id="srch" placeholder="Search dealer…" oninput="dealerPage=0;renderDealer()">
+        <select id="dealer-sort" onchange="dealerPage=0;renderDealer()">
+          <option value="qty">Sort: Total Qty ↓</option>
+          <option value="amt">Sort: Amount ↓</option>
+          <option value="name">Sort: Name A–Z</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="dealer-table">
+        <thead id="dealer-thead"></thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:14px" id="pagination"></div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let state = {
+  p     : 'all',
+  month : MONTHS.length ? MONTHS[MONTHS.length-1] : '',
+  exec  : 'ALL',
+  cat   : 'ALL',
+  custom: new Set(MONTHS),
+  view  : 'qty'
+};
+
+let dealerPage = 0;
+const PAGE = 15;
+let charts = {trend:null, cat:null, exec:null};
+
+// ─────────────────────────────────────────────
+//  POPULATE FILTER DROPDOWNS
+// ─────────────────────────────────────────────
+const msel  = document.getElementById('month-sel');
+const cWrap = document.getElementById('custom-wrap');
+
+MONTHS.forEach(m => {
+  msel.innerHTML += `<option value="${m}">${ML[m]||m}</option>`;
+
+  const lbl = document.createElement('label');
+  // Start all checked
+  lbl.className = 'mc ck';
+  lbl.innerHTML = `<input type="checkbox" value="${m}" checked><span>${ML[m]||m}</span>`;
+  const cb = lbl.querySelector('input');
+
+  cb.addEventListener('change', () => {
+    if (cb.checked) {
+      state.custom.add(m);
+      lbl.classList.add('ck');
+    } else {
+      state.custom.delete(m);
+      lbl.classList.remove('ck');
+    }
+    dealerPage = 0;
+    render();
+  });
+
+  cWrap.appendChild(lbl);
+});
+
+const esel = document.getElementById('exec-sel');
+EXECS.forEach(e => esel.innerHTML += `<option value="${e}">${e}</option>`);
+
+const csel = document.getElementById('cat-sel');
+CATS.forEach(c => csel.innerHTML += `<option value="${c}">${c}</option>`);
+
+if (RAW.error) {
+  document.getElementById('status-badge').textContent = 'ERROR';
+  document.getElementById('status-badge').className = 'badge badge-err';
+  console.error('Dashboard error:', RAW.error);
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function getMonths() {
+  if (state.p === '3')      return MONTHS.slice(-3);
+  if (state.p === '1')      return [state.month];
+  if (state.p === 'custom') return MONTHS.filter(m => state.custom.has(m));
+  return MONTHS;
+}
+
+function getFiltered() {
+  const ms = new Set(getMonths());
+  return RAW.records.filter(r => {
+    if (!ms.has(r.m))                               return false;
+    if (state.exec !== 'ALL' && r.e !== state.exec) return false;
+    if (state.cat  !== 'ALL' && r.c !== state.cat)  return false;
+    return true;
+  });
+}
+
+function aggBy(recs, field) {
+  const m = {};
+  recs.forEach(r => {
+    if (!m[r[field]]) m[r[field]] = {qty:0, amt:0};
+    m[r[field]].qty += r.q;
+    m[r[field]].amt += r.a;
+  });
+  return m;
+}
+
+function getVal(obj) {
+  return state.view === 'qty' ? obj.qty : obj.amt;
+}
+
+function fmtQty(n) {
+  n = Math.round(n) || 0;
+  if (Math.abs(n) >= 100000) return (n/100000).toFixed(1)+'L';
+  if (Math.abs(n) >= 1000)   return (n/1000).toFixed(1)+'K';
+  return n.toLocaleString('en-IN');
+}
+
+function fmtAmt(n) {
+  n = Math.round(n) || 0;
+  if (Math.abs(n) >= 10000000) return '₹'+(n/10000000).toFixed(2)+'Cr';
+  if (Math.abs(n) >= 100000)   return '₹'+(n/100000).toFixed(1)+'L';
+  if (Math.abs(n) >= 1000)     return '₹'+(n/1000).toFixed(1)+'K';
+  return '₹'+n.toLocaleString('en-IN');
+}
+
+function fmtVal(n) {
+  return state.view === 'qty' ? fmtQty(n) : fmtAmt(n);
+}
+
+function getGrowthLabel(curr, prev) {
+  if (!prev) return '<span class="gneutral">—</span>';
+  const pct = ((curr - prev) / prev * 100);
+  if (pct > 0)  return `<span class="gup">▲ ${pct.toFixed(0)}%</span>`;
+  if (pct < 0)  return `<span class="gdn">▼ ${Math.abs(pct).toFixed(0)}%</span>`;
+  return '<span class="gneutral">→</span>';
+}
+
+// ─────────────────────────────────────────────
+//  KPIs
+// ─────────────────────────────────────────────
+function renderKPIs() {
+  const recs   = getFiltered();
+  const totalQ = recs.reduce((s,r) => s+r.q, 0);
+  const totalA = recs.reduce((s,r) => s+r.a, 0);
+  const dealers  = new Set(recs.map(r=>r.d)).size;
+  const catsA    = new Set(recs.map(r=>r.c)).size;
+  const topExec  = Object.entries(aggBy(recs,'e')).filter(x=>x[0]!=='UNKNOWN').sort((a,b)=>b[1].qty-a[1].qty)[0];
+
+  const kpis = [
+    {ico:'📦', lbl:'Units Sold',     val: Math.round(totalQ).toLocaleString('en-IN'), kc:'var(--amber)'},
+    {ico:'💰', lbl:'Total Amount',   val: fmtAmt(totalA),                             kc:'var(--green)'},
+    {ico:'🏪', lbl:'Active Dealers', val: dealers,                                     kc:'var(--blue)'},
+    {ico:'📊', lbl:'Categories',     val: catsA + ' / ' + CATS.length,                kc:'var(--violet)'},
+    {ico:'🏆', lbl:'Top Executive',  val: topExec ? topExec[0].split(' ')[0] : '—',   kc:'var(--rose)'},
+  ];
+
+  document.getElementById('kpi-row').innerHTML = kpis.map(k=>`
+    <div class="kpi" style="--kc:${k.kc}">
+      <span class="kpi-icon">${k.ico}</span>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-lbl">${k.lbl}</div>
+    </div>`).join('');
+  document.getElementById('rec-count').textContent = recs.length.toLocaleString('en-IN');
+}
+
+// ─────────────────────────────────────────────
+//  TREND CHART
+// ─────────────────────────────────────────────
+function renderTrend() {
+  const ms   = getMonths();
+  const recs = getFiltered();
+  const isAmt = state.view === 'amt';
+  let datasets = [];
+
+  if (state.exec === 'ALL') {
+    datasets = EXECS.map(e => {
+      const ec = getExecColor(e);
+      return {
+        label: e.split(' ')[0],
+        data: ms.map(m => recs.filter(r=>r.m===m&&r.e===e).reduce((s,r)=>s+(isAmt?r.a:r.q),0)),
+        borderColor: ec.c,
+        backgroundColor: ec.c + '20',
+        borderWidth: 2, pointRadius: 4, tension: .35, fill: false
+      };
+    });
+  } else {
+    const cats = state.cat === 'ALL' ? CATS : [state.cat];
+    datasets = cats.map(c => ({
+      label: CAT_SHORT[c]||c,
+      data: ms.map(m => recs.filter(r=>r.m===m&&r.c===c).reduce((s,r)=>s+(isAmt?r.a:r.q),0)),
+      borderColor: CAT_COLORS[c]||'#888',
+      backgroundColor: (CAT_COLORS[c]||'#888') + '20',
+      borderWidth: 2, pointRadius: 4, tension: .35, fill: false
+    }));
+  }
+
+  document.getElementById('trend-sub').textContent =
+    isAmt ? 'Revenue per month' : 'Units sold per month by executive';
+
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+  if (charts.trend) charts.trend.destroy();
+  charts.trend = new Chart(ctx, {
+    type: 'line',
+    data: {labels: ms.map(m=>ML[m]||m), datasets},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode:'index', intersect:false},
+      plugins: {legend:{labels:{color:'#6b7280',font:{size:10,family:"'Plus Jakarta Sans'"},boxWidth:8,padding:12}}},
+      scales: {
+        x: {grid:{color:'#f3f4f6'}, ticks:{color:'#9ca3af',font:{size:10}}},
+        y: {grid:{color:'#f3f4f6'}, ticks:{color:'#9ca3af',font:{size:10},
+              callback: v => isAmt ? (v>=100000?'₹'+(v/100000).toFixed(0)+'L':v>=1000?'₹'+(v/1000).toFixed(0)+'K':'₹'+v) :
+                                     (v>=1000?(v/1000).toFixed(0)+'K':v)
+        }}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  CATEGORY DONUT
+// ─────────────────────────────────────────────
+function renderCatChart() {
+  const recs   = getFiltered();
+  const by     = aggBy(recs,'c');
+  const sorted = Object.entries(by).sort((a,b)=>getVal(b[1])-getVal(a[1]));
+  const total  = sorted.reduce((s,x)=>s+getVal(x[1]),0);
+  const isAmt  = state.view === 'amt';
+
+  document.getElementById('cat-sub').textContent =
+    isAmt ? 'Revenue share by category' : 'Quantity share by product category';
+
+  const ctx = document.getElementById('cat-chart').getContext('2d');
+  if (charts.cat) charts.cat.destroy();
+  charts.cat = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: sorted.map(x=>CAT_SHORT[x[0]]||x[0]),
+      datasets:[{
+        data: sorted.map(x=>Math.max(0,getVal(x[1]))),
+        backgroundColor: sorted.map(x=>CAT_COLORS[x[0]]||'#888'),
+        borderColor:'#fff', borderWidth:2
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{
+        legend:{position:'right',labels:{color:'#6b7280',font:{size:10},boxWidth:8,padding:8}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${isAmt?fmtAmt(c.parsed):Math.round(c.parsed).toLocaleString()} (${(c.parsed/total*100).toFixed(1)}%)`}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  EXEC PROFILES + BAR
+// ─────────────────────────────────────────────
+function renderExecProfiles() {
+  const recs   = getFiltered();
+  const by     = aggBy(recs,'e');
+  const sorted = Object.entries(by).filter(x=>x[0]!=='UNKNOWN').sort((a,b)=>getVal(b[1])-getVal(a[1]));
+  const total  = Object.values(by).reduce((s,v)=>s+getVal(v),0);
+
+  document.getElementById('ep-grid').innerHTML = sorted.map(([e,v]) => {
+    const ec      = getExecColor(e);
+    const dealers = new Set(recs.filter(r=>r.e===e).map(r=>r.d)).size;
+    const pct     = total ? (getVal(v)/total*100).toFixed(0) : 0;
+    return `<div class="ep ${state.exec===e?'sel':''}" style="--ec:${ec.c};--el:${ec.l}" onclick="setExec('${e}')">
+      <div class="ep-name">${e.split(' ')[0]}</div>
+      <div class="ep-val">${fmtVal(getVal(v))}</div>
+      <div class="ep-stat">${dealers} dealers · ${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const ctx = document.getElementById('exec-chart').getContext('2d');
+  if (charts.exec) charts.exec.destroy();
+  charts.exec = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: sorted.map(x=>x[0].split(' ')[0]),
+      datasets:[{
+        data: sorted.map(x=>Math.round(getVal(x[1]))),
+        backgroundColor: sorted.map(x=>getExecColor(x[0]).c),
+        borderRadius:5, borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtVal(c.parsed.x)}`}}},
+      scales:{
+        x:{grid:{color:'#f3f4f6'},ticks:{color:'#9ca3af',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}},
+        y:{grid:{display:false},ticks:{color:'#374151',font:{size:11,weight:'600'}}}
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  HEATMAP
+// ─────────────────────────────────────────────
+function renderHeatmap() {
+  const recs   = getFiltered();
+  const isAmt  = state.view === 'amt';
+  const m      = {};
+  EXECS.forEach(e=>{m[e]={};CATS.forEach(c=>{m[e][c]=0;});});
+  recs.forEach(r=>{if(m[r.e])m[r.e][r.c]=(m[r.e][r.c]||0)+(isAmt?r.a:r.q);});
+
+  let maxV = 0;
+  EXECS.forEach(e=>CATS.forEach(c=>{if(m[e][c]>maxV)maxV=m[e][c];}));
+
+  document.getElementById('heatmap-sub').textContent =
+    isAmt ? 'Revenue intensity by exec & category' : 'Unit intensity by exec & category';
+
+  let html = `<div class="hm-grid" style="grid-template-columns:68px ${CATS.map(()=>'1fr').join(' ')}">`;
+  html += '<div class="hm-head"></div>';
+  CATS.forEach(c=>html+=`<div class="hm-head" title="${c}">${CAT_SHORT[c]||c}</div>`);
+  EXECS.forEach(e=>{
+    const ec = getExecColor(e).c;
+    html += `<div class="hm-exec" style="color:${ec};font-family:'Space Grotesk',sans-serif">${e.split(' ')[0]}</div>`;
+    CATS.forEach(c=>{
+      const v = m[e][c] || 0;
+      const a = maxV > 0 ? v/maxV : 0;
+      const bg = a > 0 ? ec + Math.round(a*180+30).toString(16).padStart(2,'0') : '#f9fafb';
+      const fg = a > 0.5 ? '#fff' : (a > 0 ? ec : '#d1d5db');
+      html += `<div class="hm-cell" style="background:${bg};color:${fg}" title="${e} · ${c}: ${fmtVal(v)}">${v>0?fmtVal(v):''}</div>`;
+    });
+  });
+  html += '</div>';
+  document.getElementById('heatmap').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+//  MONTH-WISE SUMMARY TABLE
+// ─────────────────────────────────────────────
+function renderMonthTable() {
+  const recs  = getFiltered();
+  const ms    = getMonths();
+
+  const rows = ms.map(m => {
+    const mRecs = recs.filter(r=>r.m===m);
+    return {
+      m, label: ML[m]||m,
+      qty: mRecs.reduce((s,r)=>s+r.q,0),
+      amt: mRecs.reduce((s,r)=>s+r.a,0),
+      dealers: new Set(mRecs.map(r=>r.d)).size
+    };
+  });
+
+  const tbl = document.getElementById('month-table');
+  if (!rows.length) { tbl.innerHTML=''; return; }
+
+  let thead = '<thead><tr><th>Month</th><th>Qty</th><th>MoM</th><th>Amount (₹)</th><th>MoM</th><th>Dealers</th></tr></thead>';
+  let tbody = '<tbody>';
+  rows.forEach((r,i) => {
+    const prev = rows[i-1];
+    tbody += `<tr>
+      <td>${r.label}</td>
+      <td>${Math.round(r.qty).toLocaleString('en-IN')}</td>
+      <td>${getGrowthLabel(r.qty, prev?.qty)}</td>
+      <td>${fmtAmt(r.amt)}</td>
+      <td>${getGrowthLabel(r.amt, prev?.amt)}</td>
+      <td>${r.dealers}</td>
+    </tr>`;
+  });
+  const tQty = rows.reduce((s,r)=>s+r.qty,0);
+  const tAmt = rows.reduce((s,r)=>s+r.amt,0);
+  const tDlr = new Set(recs.map(r=>r.d)).size;
+  tbody += `<tr style="background:#fffbeb">
+    <td>Total</td>
+    <td>${Math.round(tQty).toLocaleString('en-IN')}</td>
+    <td></td>
+    <td>${fmtAmt(tAmt)}</td>
+    <td></td>
+    <td>${tDlr}</td>
+  </tr></tbody>`;
+  tbl.innerHTML = thead + tbody;
+}
+
+// ─────────────────────────────────────────────
+//  TOP DEALERS
+// ─────────────────────────────────────────────
+function renderTopDealers() {
+  const recs = getFiltered();
+  const by   = {};
+  recs.forEach(r => {
+    if (!by[r.d]) by[r.d]={qty:0,amt:0,exec:r.e,cats:new Set()};
+    by[r.d].qty+=r.q; by[r.d].amt+=r.a; by[r.d].cats.add(r.c);
+  });
+  const sorted = Object.entries(by).sort((a,b)=>getVal(b[1])-getVal(a[1])).slice(0,8);
+  const max    = sorted[0] ? getVal(sorted[0][1]) : 1;
+  const medals = ['gold','silver','bronze'];
+
+  document.getElementById('top-d-sub').textContent = state.view==='amt' ? 'By revenue' : 'By units sold';
+  document.getElementById('top-dealers').innerHTML = sorted.map(([d,v],i) => {
+    const ec  = getExecColor(v.exec);
+    const cls = medals[i]||'other';
+    return `<div class="rank-item">
+      <span class="rank-num ${cls}">${i+1}</span>
+      <div style="flex:1;overflow:hidden">
+        <div class="rank-name" title="${d}">${d}</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(getVal(v)/max*100)}%;background:${ec.c}"></div></div>
+      </div>
+      <div>
+        <div class="rank-val">${fmtVal(getVal(v))}</div>
+        <div class="rank-val2">${v.cats.size} cats</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  TOP EXECS
+// ─────────────────────────────────────────────
+function renderTopExecs() {
+  const recs = getFiltered().filter(r=>r.e!=='UNKNOWN');
+  const by   = {};
+  recs.forEach(r=>{
+    if (!by[r.e]) by[r.e]={qty:0,amt:0,cats:new Set(),dealers:new Set()};
+    by[r.e].qty+=r.q; by[r.e].amt+=r.a;
+    by[r.e].cats.add(r.c); by[r.e].dealers.add(r.d);
+  });
+  const sorted = Object.entries(by).sort((a,b)=>getVal(b[1])-getVal(a[1]));
+  const max    = sorted[0] ? getVal(sorted[0][1]) : 1;
+  const medals = ['gold','silver','bronze'];
+  document.getElementById('top-execs').innerHTML = sorted.map(([e,v],i)=>{
+    const ec  = getExecColor(e);
+    const cls = medals[i]||'other';
+    return `<div class="rank-item">
+      <span class="rank-num ${cls}">${i+1}</span>
+      <div style="flex:1;overflow:hidden">
+        <div class="rank-name">${e}</div>
+        <div class="rank-sub">${v.dealers.size} dealers · ${v.cats.size} cats</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(getVal(v)/max*100)}%;background:${ec.c}"></div></div>
+      </div>
+      <div>
+        <div class="rank-val">${fmtVal(getVal(v))}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  CATEGORY SPARKLINES
+// ─────────────────────────────────────────────
+function renderCatSparks() {
+  const ms   = getMonths();
+  const recs = getFiltered();
+  const isAmt = state.view === 'amt';
+  document.getElementById('cat-sparks').innerHTML = CATS.map(c=>{
+    const vals  = ms.map(m=>recs.filter(r=>r.m===m&&r.c===c).reduce((s,r)=>s+(isAmt?r.a:r.q),0));
+    const maxV  = Math.max(...vals, 1);
+    const total = vals.reduce((s,v)=>s+v,0);
+    const bars  = vals.map((v,i)=>{
+      const h   = Math.max(3, Math.round(v/maxV*30));
+      return `<div class="spark-b" style="height:${h}px;background:${CAT_COLORS[c]||'#888'};opacity:0.8" title="${ML[ms[i]]||ms[i]}: ${fmtVal(v)}"></div>`;
+    }).join('');
+    return `<div class="spark-row">
+      <div class="spark-lbl" style="color:${CAT_COLORS[c]||'#888'}">${CAT_SHORT[c]||c}</div>
+      <div class="spark-bars">${bars}</div>
+      <div class="spark-ttl">${fmtVal(total)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  DEALER TABLE — UPDATED
+// ─────────────────────────────────────────────
+
+// Build and inject the static table header (only once on load)
+function buildDealerTableHeader() {
+  const thead = document.getElementById('dealer-thead');
+  let html = '<tr>';
+  html += '<th style="width:36px">#</th>';
+  html += '<th style="min-width:160px">Dealer</th>';
+  html += '<th style="min-width:90px">Executive</th>';
+  html += '<th style="text-align:right;min-width:70px">Total Qty</th>';
+  // Per-category qty columns
+  DEALER_CAT_ORDER.forEach(cat => {
+    const thCls = DEALER_CAT_TH_CLASS[cat] || '';
+    const shortLabel = CAT_SHORT[cat] || cat;
+    html += `<th class="cat-th ${thCls}" title="${cat}">${shortLabel} Qty</th>`;
+  });
+  html += '<th style="text-align:right;min-width:90px;border-left:2px solid var(--border)">Amount (₹)</th>';
+  html += '</tr>';
+  thead.innerHTML = html;
+}
+
+function getDealerRows() {
+  const recs   = getFiltered();
+  const srch   = document.getElementById('srch').value.toLowerCase();
+  const sortBy = document.getElementById('dealer-sort').value;
+  const dm     = {};
+
+  recs.forEach(r => {
+    if (!dm[r.d]) {
+      dm[r.d] = { exec: r.e, qty: 0, amt: 0, cats: {} };
+      DEALER_CAT_ORDER.forEach(c => { dm[r.d].cats[c] = 0; });
+    }
+    dm[r.d].qty      += r.q;
+    dm[r.d].amt      += r.a;
+    dm[r.d].cats[r.c] = (dm[r.d].cats[r.c] || 0) + r.q;
+  });
+
+  let rows = Object.entries(dm)
+    .filter(([d]) => d.toLowerCase().includes(srch))
+    .map(([d, v]) => ({ d, exec: v.exec, qty: v.qty, amt: v.amt, cats: v.cats }));
+
+  if      (sortBy === 'qty')  rows.sort((a,b) => b.qty - a.qty);
+  else if (sortBy === 'amt')  rows.sort((a,b) => b.amt - a.amt);
+  else                        rows.sort((a,b) => a.d.localeCompare(b.d));
+
+  return rows;
+}
+
+function renderDealer() {
+  const rows  = getDealerRows();
+  document.getElementById('dealer-sub').textContent = `${rows.length} dealers matched`;
+  const start = dealerPage * PAGE;
+  const pg    = rows.slice(start, start + PAGE);
+  const tbody = document.getElementById('tbl-body');
+
+  if (!pg.length) {
+    tbody.innerHTML = '<tr><td colspan="' + (4 + DEALER_CAT_ORDER.length + 1) + '" class="no-data">No dealers found</td></tr>';
+    renderPag(0, 0);
+    return;
+  }
+
+  tbody.innerHTML = pg.map((r, i) => {
+    const ec  = getExecColor(r.exec);
+
+    // Per-category qty cells
+    const catCells = DEALER_CAT_ORDER.map(cat => {
+      const v   = r.cats[cat] || 0;
+      const cls = v > 0 ? 'cat-td has-val' : 'cat-td';
+      const col = CAT_COLORS[cat] || '#888';
+      const style = v > 0 ? `color:${col};font-weight:700` : '';
+      return `<td class="${cls}" style="${style}">${v > 0 ? Math.round(v).toLocaleString('en-IN') : '—'}</td>`;
+    }).join('');
+
+    return `<tr>
+      <td style="color:var(--dim);font-size:10px;font-weight:600">${start + i + 1}</td>
+      <td><div class="dealer-nm" title="${r.d}">${r.d}</div></td>
+      <td><span class="pill" style="background:${ec.l};color:${ec.c}">${r.exec.split(' ')[0]}</span></td>
+      <td style="text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:13px;color:var(--txt)">${Math.round(r.qty).toLocaleString('en-IN')}</td>
+      ${catCells}
+      <td style="text-align:right;font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--muted);border-left:2px solid var(--border)">${fmtAmt(r.amt)}</td>
+    </tr>`;
+  }).join('');
+
+  renderPag(start, rows.length);
+}
+
+function renderPag(start, total) {
+  const pages = Math.ceil(total / PAGE);
+  const el    = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `<span style="font-size:11px;color:var(--muted)">${start+1}–${Math.min(start+PAGE,total)} of ${total}</span>
+    <button class="pg-btn" onclick="dealerPage=Math.max(0,dealerPage-1);renderDealer()" ${dealerPage===0?'disabled':''}>← Prev</button>
+    <button class="pg-btn" onclick="dealerPage=Math.min(${pages-1},dealerPage+1);renderDealer()" ${dealerPage>=pages-1?'disabled':''}>Next →</button>`;
+}
+
+// ─────────────────────────────────────────────
+//  CONTROLS
+// ─────────────────────────────────────────────
+function setExec(e) {
+  state.exec = state.exec === e ? 'ALL' : e;
+  document.getElementById('exec-sel').value = state.exec;
+  dealerPage = 0;
+  render();
+}
+
+document.getElementById('period-tabs').addEventListener('click', e => {
+  const p = e.target.dataset.p;
+  if (!p) return;
+  state.p = p;
+  document.querySelectorAll('#period-tabs .tab').forEach(t => t.classList.remove('on'));
+  e.target.classList.add('on');
+  document.getElementById('month-sel-wrap').style.display = p === '1'      ? 'block' : 'none';
+  document.getElementById('custom-wrap').style.display    = p === 'custom' ? 'flex'  : 'none';
+  dealerPage = 0;
+  render();
+});
+
+document.getElementById('month-sel').addEventListener('change', e => { state.month = e.target.value; render(); });
+document.getElementById('exec-sel').addEventListener('change', e => { state.exec = e.target.value; dealerPage = 0; render(); });
+document.getElementById('cat-sel').addEventListener('change', e => { state.cat = e.target.value; dealerPage = 0; render(); });
+
+document.querySelector('.value-toggle').addEventListener('click', e => {
+  const v = e.target.dataset.v;
+  if (!v) return;
+  state.view = v;
+  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('on'));
+  e.target.classList.add('on');
+  dealerPage = 0;
+  render();
+});
+
+// ─────────────────────────────────────────────
+//  RENDER ALL
+// ─────────────────────────────────────────────
+function render() {
+  renderKPIs();
+  renderTrend();
+  renderCatChart();
+  renderExecProfiles();
+  renderHeatmap();
+  renderMonthTable();
+  renderTopDealers();
+  renderTopExecs();
+  renderCatSparks();
+  renderDealer();
+}
+
+// ─────────────────────────────────────────────
+//  REFRESH — fetches fresh data from the sheet
+//  without a full page reload
+// ─────────────────────────────────────────────
+function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  const badge = document.getElementById('status-badge');
+
+  // Show loading state
+  btn.textContent = '⏳ Loading…';
+  btn.disabled = true;
+  badge.textContent = 'REFRESHING…';
+  badge.style.background = '#dbeafe';
+  badge.style.color = '#1e40af';
+  badge.style.borderColor = '#93c5fd';
+
+  // google.script.run is available when served from Apps Script
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(jsonStr) {
+        try {
+          const fresh = JSON.parse(jsonStr);
+          // Update the global RAW object
+          RAW.records = Array.isArray(fresh.records) ? fresh.records : [];
+          RAW.execs   = Array.isArray(fresh.execs)   ? fresh.execs   : [];
+          RAW.cats    = Array.isArray(fresh.cats)     ? fresh.cats    : [];
+          RAW.months  = Array.isArray(fresh.months)   ? fresh.months  : [];
+          RAW.ml      = fresh.ml || {};
+
+          // Rebuild month selectors and custom checkboxes with fresh months
+          rebuildMonthFilters();
+
+          // Re-render everything
+          render();
+
+          // Restore button
+          btn.textContent = '✅ Updated';
+          badge.textContent = 'LIVE DATA';
+          badge.style.background = '';
+          badge.style.color = '';
+          badge.style.borderColor = '';
+          setTimeout(() => { btn.textContent = '↻ Refresh'; btn.disabled = false; }, 1500);
+
+        } catch(e) {
+          onRefreshError('Parse error: ' + e.message);
+        }
+      })
+      .withFailureHandler(function(err) {
+        onRefreshError(err.message || 'Unknown error');
+      })
+      .getDataJson();   // ← calls getDataJson() in Code.gs
+  } else {
+    // Fallback: force reload with cache-bust timestamp in URL
+    const url = window.location.href.split('?')[0];
+    window.location.href = url + '?t=' + Date.now();
+  }
+}
+
+function onRefreshError(msg) {
+  const btn   = document.getElementById('refresh-btn');
+  const badge = document.getElementById('status-badge');
+  btn.textContent = '↻ Refresh';
+  btn.disabled = false;
+  badge.textContent = 'ERROR';
+  badge.style.background = '#fee2e2';
+  badge.style.color = '#991b1b';
+  badge.style.borderColor = '#fca5a5';
+  console.error('Refresh failed:', msg);
+  alert('Refresh failed: ' + msg + '\n\nTip: Make sure getDataJson() is added to Code.gs and redeployed.');
+}
+
+// Rebuild month filter dropdowns/checkboxes after a data refresh
+function rebuildMonthFilters() {
+  const ms    = RAW.months;
+  const ml    = RAW.ml;
+
+  // Rebuild single-month select
+  const msel = document.getElementById('month-sel');
+  msel.innerHTML = '';
+  ms.forEach(m => { msel.innerHTML += `<option value="${m}">${ml[m]||m}</option>`; });
+
+  // Rebuild custom checkboxes
+  const cWrap = document.getElementById('custom-wrap');
+  cWrap.innerHTML = '';
+  state.custom = new Set(ms);   // reset selection to all
+  ms.forEach(m => {
+    const lbl = document.createElement('label');
+    lbl.className = 'mc ck';
+    lbl.innerHTML = `<input type="checkbox" value="${m}" checked><span>${ml[m]||m}</span>`;
+    const cb = lbl.querySelector('input');
+    cb.addEventListener('change', () => {
+      if (cb.checked) { state.custom.add(m); lbl.classList.add('ck'); }
+      else            { state.custom.delete(m); lbl.classList.remove('ck'); }
+      dealerPage = 0; render();
+    });
+    cWrap.appendChild(lbl);
+  });
+
+  // Update exec dropdown
+  const esel = document.getElementById('exec-sel');
+  esel.innerHTML = '<option value="ALL">All Executives</option>';
+  RAW.execs.forEach(e => { esel.innerHTML += `<option value="${e}">${e}</option>`; });
+
+  // Update cat dropdown
+  const csel = document.getElementById('cat-sel');
+  csel.innerHTML = '<option value="ALL">All Categories</option>';
+  RAW.cats.forEach(c => { csel.innerHTML += `<option value="${c}">${c}</option>`; });
+
+  // Reset state to safe defaults
+  state.month = ms.length ? ms[ms.length - 1] : '';
+  state.exec  = 'ALL';
+  state.cat   = 'ALL';
+  document.getElementById('exec-sel').value = 'ALL';
+  document.getElementById('cat-sel').value  = 'ALL';
+
+  // Rebuild dealer table header (cats may have changed)
+  buildDealerTableHeader();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+buildDealerTableHeader();
+
+if (!Array.isArray(RAW.records)) RAW.records = [];
+
+if (RAW.records.length === 0 && !RAW.error) {
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi" style="grid-column:1/-1">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <h3>No Data Found</h3>
+        <p>Check that your sheet tab names match the MONTHLY_SHEETS list in Code.gs.<br>
+        Run the <b>listSheetNames()</b> function in Apps Script to see exact names.</p>
+      </div>
+    </div>`;
+} else {
+  render();
+}
+</script>
+</body>
+</html>

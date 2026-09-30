@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 16px 18px;
+        color: #222;
+      }
+      h2 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        color: #1a73e8;
+      }
+      p.intro {
+        margin: 0 0 14px 0;
+        color: #555;
+        line-height: 1.4;
+      }
+      .field { margin-bottom: 12px; }
+      .field label.fieldLabel {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .hint {
+        color: #666;
+        font-size: 11px;
+        margin-top: 3px;
+        line-height: 1.35;
+      }
+      input[type="text"], input[type="number"], select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      .row { display: flex; gap: 14px; }
+      .row > .field { flex: 1; }
+      .radioGroup {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+      .radioGroup label {
+        flex: 1;
+        min-width: 120px;
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        background: #fff;
+        text-align: center;
+        font-size: 12px;
+        user-select: none;
+      }
+      .radioGroup label.on {
+        background: #e8f0fe;
+        border-color: #1a73e8;
+        font-weight: bold;
+      }
+      .radioGroup input { display: none; }
+      fieldset {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 10px 12px;
+        margin: 0 0 12px 0;
+      }
+      fieldset legend {
+        padding: 0 6px;
+        color: #1a73e8;
+        font-weight: bold;
+      }
+      .conditional-block {
+        background: #f7f9ff;
+        border-left: 3px solid #1a73e8;
+        padding: 8px 10px;
+        margin-top: 8px;
+      }
+      .timing-block { margin-top: 8px; }
+      .timing-block.hidden { display: none; }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      button.primary:disabled { opacity: 0.6; cursor: wait; }
+      .error {
+        color: #b00020;
+        font-size: 12px;
+        margin: 6px 0;
+        display: none;
+      }
+      .error.show { display: block; }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .checkbox-row input { margin: 0; }
+      .hidden { display: none; }
+      #infoColumnsList { margin-top: 6px; }
+      .ic-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .ic-row input { flex: 1; }
+      .ic-row .ic-rm {
+        background: transparent;
+        border: 1px solid #ccc;
+        color: #666;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 8px;
+        height: 28px;
+        border-radius: 3px;
+      }
+      .ic-row .ic-rm:hover { background: #fdecea; color: #b00020; border-color: #b00020; }
+      .ic-add {
+        background: #fff;
+        border: 1px dashed #1a73e8;
+        color: #1a73e8;
+        padding: 6px 12px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      optgroup { font-style: normal; }
+      .pending-tag {
+        font-size: 10px;
+        background: #fff8e1;
+        color: #8a6d00;
+        padding: 1px 4px;
+        border-radius: 2px;
+        margin-left: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Add a Step</h2>
+    <p class="intro">
+      One dialog, one step. The script inserts 4 columns at the right end of your FMS
+      (Planned / Actual / Status / Time Delay), writes all formulas, adds the dropdown,
+      and applies overdue + late color rules.
+    </p>
+
+    <fieldset>
+      <legend>Step details</legend>
+      <div class="field">
+        <label class="fieldLabel" for="stepName">Step name</label>
+        <input type="text" id="stepName" placeholder="e.g. Issue PO to Supplier" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label class="fieldLabel" for="who">Who (one person/role)</label>
+          <input type="text" id="who" placeholder="e.g. Purchase Assistant" />
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="how">How</label>
+          <input type="text" id="how" placeholder="e.g. Get WhatsApp PO confirmation" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="fieldLabel">Step type</label>
+        <div class="radioGroup" id="stepTypeRadios">
+          <label data-value="normal" class="on">
+            <input type="radio" name="stepType" value="normal" checked /> Normal step (Done)
+          </label>
+          <label data-value="decision">
+            <input type="radio" name="stepType" value="decision" /> Decision step (Yes/No)
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Advanced (optional)</legend>
+      <div class="checkbox-row">
+        <input type="checkbox" id="useAdvanced" />
+        <label for="useAdvanced">Add additional information columns (e.g. Lead Time, Customer Type)</label>
+      </div>
+      <div id="advancedBlock" class="hidden">
+        <div id="infoColumnsList"></div>
+        <button class="ic-add" type="button" onclick="addInfoColumn()">+ Add column</button>
+        <div class="hint" style="margin-top:6px;">
+          Columns added here are inserted between the existing columns and the new step. They
+          appear in the dropdowns below and can be picked as the Lead Time / Start Date /
+          Reference Date for this step's timing formula.
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>When</legend>
+      <div class="field">
+        <label class="fieldLabel">Timing method</label>
+        <div class="radioGroup" id="timingRadios">
+          <label data-value="TAT" class="on">
+            <input type="radio" name="timing" value="TAT" checked /> TAT (working hours)
+          </label>
+          <label data-value="TX">
+            <input type="radio" name="timing" value="TX" /> Days Before Future Date
+          </label>
+          <label data-value="SPECIFIC_TIME">
+            <input type="radio" name="timing" value="SPECIFIC_TIME" /> Specific Clock Time
+          </label>
+        </div>
+      </div>
+
+      <div class="timing-block" id="timingTAT">
+        <div class="row">
+          <div class="field">
+            <label class="fieldLabel" for="tatHours">TAT (hours)</label>
+            <input type="number" id="tatHours" value="3" min="0" step="0.5" />
+            <div class="hint">Hours from the previous step's completion. Use decimals like 0.5 for 30 minutes.</div>
+          </div>
+          <div class="field">
+            <label class="fieldLabel" for="tatAnchorCol">Trigger from</label>
+            <select id="tatAnchorCol"></select>
+            <div class="hint">Which step's Actual cell triggers the countdown. Leave on Auto for the previous step.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timing-block hidden" id="timingTX">
+        <div class="row">
+          <div class="field">
+            <label class="fieldLabel" for="txStartDateCol">Start Date column</label>
+            <select id="txStartDateCol"></select>
+            <div class="hint">The date you add the lead time to. Usually the Actual of the step where the order/PO was issued.</div>
+          </div>
+          <div class="field">
+            <label class="fieldLabel" for="txLeadTimeCol">Lead Time column</label>
+            <select id="txLeadTimeCol"></select>
+            <div class="hint">The numeric column holding the lead time (in days). Add one in the Advanced section if you don't have it.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="txDaysBefore">Days Before delivery</label>
+          <input type="number" id="txDaysBefore" value="2" min="0" step="1" />
+          <div class="hint">2 = "follow up 2 days before delivery". 0 = "the delivery date itself".</div>
+        </div>
+      </div>
+
+      <div class="timing-block hidden" id="timingSPECIFIC_TIME">
+        <div class="row">
+          <div class="field">
+            <label class="fieldLabel" for="stAnchorCol">Reference Date column</label>
+            <select id="stAnchorCol"></select>
+            <div class="hint">The reference date this deadline counts from. Usually the previous step's Actual cell.</div>
+          </div>
+          <div class="field">
+            <label class="fieldLabel" for="stTimeOfDay">Time of Day (HH:MM)</label>
+            <input type="text" id="stTimeOfDay" value="18:00" placeholder="18:00" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="fieldLabel">Days After</label>
+          <div class="radioGroup" id="stDaysAfterRadios">
+            <label data-value="0" class="on"><input type="radio" name="stDaysAfter" value="0" checked /> Same day</label>
+            <label data-value="1"><input type="radio" name="stDaysAfter" value="1" /> Next working day</label>
+            <label data-value="2"><input type="radio" name="stDaysAfter" value="2" /> Day after next</label>
+            <label data-value="custom"><input type="radio" name="stDaysAfter" value="custom" /> Custom</label>
+          </div>
+          <input type="number" id="stDaysAfterCustom" value="3" min="0" step="1" style="margin-top:6px; display:none;" />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Conditional (optional)</legend>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isConditional" />
+        <label for="isConditional">Only run on a Yes / No path of an earlier decision</label>
+      </div>
+      <div class="conditional-block hidden" id="conditionalBlock">
+        <div class="row">
+          <div class="field">
+            <label class="fieldLabel" for="conditionalDecision">Decision step</label>
+            <select id="conditionalDecision">
+              <option value="">— Pick a decision step —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="fieldLabel">Run only when</label>
+            <div class="radioGroup" id="conditionalOnRadios">
+              <label data-value="Yes" class="on"><input type="radio" name="conditionalOn" value="Yes" checked /> Yes</label>
+              <label data-value="No"><input type="radio" name="conditionalOn" value="No" /> No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="error" id="errBox"></div>
+
+    <div class="actions">
+      <button onclick="google.script.host.close()">Cancel</button>
+      <button class="primary" id="saveBtn" onclick="onSave()">Add Step</button>
+    </div>
+
+    <script>
+      var ctx = <?!= context ?>;
+
+      // Pending info columns the user is declaring in this wizard call.
+      // Each entry: { name } — referenced via _new_<index> placeholders.
+      var infoColumns = [];
+
+      // ---------- Info column add/remove (Advanced section) ----------
+      function renderInfoColumns() {
+        var list = document.getElementById('infoColumnsList');
+        list.innerHTML = '';
+        infoColumns.forEach(function (ic, idx) {
+          var row = document.createElement('div');
+          row.className = 'ic-row';
+          var input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Column name (e.g. Lead Time)';
+          input.value = ic.name;
+          input.oninput = function () {
+            ic.name = input.value;
+            updateAllDataColumnDropdowns();
+          };
+          row.appendChild(input);
+          var rmBtn = document.createElement('button');
+          rmBtn.type = 'button';
+          rmBtn.className = 'ic-rm';
+          rmBtn.textContent = '×';
+          rmBtn.title = 'Remove this column';
+          rmBtn.onclick = function () {
+            infoColumns.splice(idx, 1);
+            renderInfoColumns();
+            updateAllDataColumnDropdowns();
+          };
+          row.appendChild(rmBtn);
+          list.appendChild(row);
+        });
+      }
+
+      function addInfoColumn() {
+        infoColumns.push({ name: '' });
+        renderInfoColumns();
+        updateAllDataColumnDropdowns();
+        var inputs = document.querySelectorAll('#infoColumnsList input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }
+
+      // ---------- Data column dropdown population ----------
+      // Returns the combined list of selectable columns: existing data columns
+      // (form + info + actual) from ctx, plus the pending info columns being
+      // declared in this wizard call.
+      function getCombinedColumns() {
+        var combined = (ctx.dataColumns || []).slice();
+        infoColumns.forEach(function (ic, idx) {
+          var name = (ic.name || '').trim();
+          if (!name) return;
+          combined.push({
+            column: '_new_' + idx,
+            columnLetter: '?',
+            header: name,
+            type: 'pending',
+            label: name + ' (new)'
+          });
+        });
+        return combined;
+      }
+
+      function populateColumnDropdown(selectId, opts) {
+        var sel = document.getElementById(selectId);
+        if (!sel) return;
+        var current = sel.value;  // preserve selection across re-renders
+        sel.innerHTML = '';
+        if (opts && opts.firstOption) {
+          var first = document.createElement('option');
+          first.value = opts.firstOption.value;
+          first.textContent = opts.firstOption.label;
+          sel.appendChild(first);
+        }
+
+        var cols = getCombinedColumns();
+        if (opts && opts.filter) cols = cols.filter(opts.filter);
+
+        // Group by type (Actual / Data / Pending) for readability
+        var grpActual = document.createElement('optgroup');
+        grpActual.label = 'Step Actuals';
+        var grpData = document.createElement('optgroup');
+        grpData.label = 'Form / Info Columns';
+        var grpPending = document.createElement('optgroup');
+        grpPending.label = 'Pending (added in Advanced)';
+
+        cols.forEach(function (c) {
+          var opt = document.createElement('option');
+          opt.value = String(c.column);
+          opt.textContent = c.label;
+          if (c.type === 'actual') grpActual.appendChild(opt);
+          else if (c.type === 'pending') grpPending.appendChild(opt);
+          else grpData.appendChild(opt);
+        });
+
+        if (grpActual.children.length) sel.appendChild(grpActual);
+        if (grpData.children.length) sel.appendChild(grpData);
+        if (grpPending.children.length) sel.appendChild(grpPending);
+
+        // Restore selection if still valid
+        if (current) {
+          var found = false;
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === current) { found = true; break; }
+          }
+          if (found) sel.value = current;
+        }
+      }
+
+      function updateAllDataColumnDropdowns() {
+        // TAT trigger: Actual columns only, with Auto fallback
+        populateColumnDropdown('tatAnchorCol', {
+          firstOption: { value: '', label: 'Auto (previous step\'s Actual)' },
+          filter: function (c) { return c.type === 'actual'; }
+        });
+        // TX Start Date and Lead Time: all columns (data + actual + pending)
+        populateColumnDropdown('txStartDateCol', {
+          firstOption: { value: '', label: '— Pick a column —' }
+        });
+        populateColumnDropdown('txLeadTimeCol', {
+          firstOption: { value: '', label: '— Pick a column —' }
+        });
+        // Specific Time Reference Date: all columns
+        populateColumnDropdown('stAnchorCol', {
+          firstOption: { value: '', label: '— Pick a column —' }
+        });
+      }
+
+      function populateDecisionDropdown() {
+        var dd = document.getElementById('conditionalDecision');
+        (ctx.decisionSteps || []).forEach(function (d) {
+          var opt = document.createElement('option');
+          opt.value = d.statusColumn;
+          opt.textContent = d.stepName + ' — Status (' + d.statusColumnLetter + ')';
+          dd.appendChild(opt);
+        });
+        if (!ctx.decisionSteps || ctx.decisionSteps.length === 0) {
+          var opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = '(no decision steps in sheet yet)';
+          opt.disabled = true;
+          dd.appendChild(opt);
+        }
+      }
+
+      // ---------- Radio group toggling ----------
+      function wireRadioGroup(groupId, onChange) {
+        var labels = document.querySelectorAll('#' + groupId + ' label');
+        for (var i = 0; i < labels.length; i++) {
+          (function (lbl) {
+            lbl.addEventListener('click', function () {
+              setTimeout(function () {
+                var ll = document.querySelectorAll('#' + groupId + ' label');
+                for (var j = 0; j < ll.length; j++) {
+                  var inp = ll[j].querySelector('input');
+                  if (inp.checked) ll[j].classList.add('on');
+                  else ll[j].classList.remove('on');
+                }
+                if (onChange) onChange();
+              }, 0);
+            });
+          })(labels[i]);
+        }
+      }
+
+      function getRadio(name) {
+        var els = document.getElementsByName(name);
+        for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;
+        return '';
+      }
+
+      function refreshTimingBlock() {
+        var v = getRadio('timing');
+        document.getElementById('timingTAT').classList.toggle('hidden', v !== 'TAT');
+        document.getElementById('timingTX').classList.toggle('hidden', v !== 'TX');
+        document.getElementById('timingSPECIFIC_TIME').classList.toggle('hidden', v !== 'SPECIFIC_TIME');
+      }
+
+      function refreshConditional() {
+        var on = document.getElementById('isConditional').checked;
+        document.getElementById('conditionalBlock').classList.toggle('hidden', !on);
+      }
+
+      function refreshAdvanced() {
+        var on = document.getElementById('useAdvanced').checked;
+        document.getElementById('advancedBlock').classList.toggle('hidden', !on);
+        if (!on) {
+          // Clear any pending info columns when the user disables Advanced
+          infoColumns = [];
+          renderInfoColumns();
+          updateAllDataColumnDropdowns();
+        }
+      }
+
+      function refreshDaysAfterCustom() {
+        var v = getRadio('stDaysAfter');
+        document.getElementById('stDaysAfterCustom').style.display = (v === 'custom') ? 'block' : 'none';
+      }
+
+      // ---------- Validation + submit ----------
+      function showError(msg) {
+        var box = document.getElementById('errBox');
+        box.textContent = msg;
+        box.classList.add('show');
+      }
+      function clearError() {
+        var box = document.getElementById('errBox');
+        box.textContent = '';
+        box.classList.remove('show');
+      }
+
+      function validHHMM(s) {
+        return /^([01]?\d|2[0-3]):[0-5]\d$/.test(String(s || '').trim());
+      }
+
+      function onSave() {
+        clearError();
+
+        var stepName = document.getElementById('stepName').value.trim();
+        if (!stepName) return showError('Step name is required.');
+        var stepType = getRadio('stepType');
+        var timing = getRadio('timing');
+        if (!timing) return showError('Pick a timing method.');
+
+        // Filter out empty pending info columns
+        var validInfoCols = infoColumns.filter(function (ic) {
+          return ic.name && ic.name.trim();
+        });
+
+        var payload = {
+          stepName: stepName,
+          who: document.getElementById('who').value.trim(),
+          how: document.getElementById('how').value.trim(),
+          stepType: stepType,
+          timing: timing,
+          additionalInfoColumns: validInfoCols.map(function (ic) {
+            return { name: ic.name.trim() };
+          }),
+          conditional: false
+        };
+
+        if (timing === 'TAT') {
+          var tatHours = parseFloat(document.getElementById('tatHours').value);
+          if (isNaN(tatHours) || tatHours < 0) return showError('TAT hours must be 0 or greater.');
+          payload.tatHours = tatHours;
+          payload.tatAnchorCol = document.getElementById('tatAnchorCol').value || '';
+        } else if (timing === 'TX') {
+          var startCol = document.getElementById('txStartDateCol').value;
+          if (!startCol) return showError('Pick a Start Date column.');
+          payload.txStartDateCol = startCol;
+          var leadCol = document.getElementById('txLeadTimeCol').value;
+          if (!leadCol) return showError('Pick a Lead Time column (or add one in the Advanced section).');
+          payload.txLeadTimeCol = leadCol;
+          var txDaysBefore = parseInt(document.getElementById('txDaysBefore').value, 10);
+          if (isNaN(txDaysBefore) || txDaysBefore < 0) return showError('Days Before must be 0 or greater.');
+          payload.txDaysBefore = txDaysBefore;
+
+          // If the user picked a pending column but its name is blank, refuse
+          if (/^_new_(\d+)$/.test(startCol)) {
+            var idx = parseInt(RegExp.$1, 10);
+            if (!validInfoCols[idx] || !validInfoCols[idx].name) {
+              return showError('The Start Date column refers to a pending Advanced column with no name.');
+            }
+          }
+          if (/^_new_(\d+)$/.test(leadCol)) {
+            var idx2 = parseInt(RegExp.$1, 10);
+            if (!validInfoCols[idx2] || !validInfoCols[idx2].name) {
+              return showError('The Lead Time column refers to a pending Advanced column with no name.');
+            }
+          }
+        } else if (timing === 'SPECIFIC_TIME') {
+          var stAnchor = document.getElementById('stAnchorCol').value;
+          if (!stAnchor) return showError('Pick a Reference Date column.');
+          payload.stAnchorCol = stAnchor;
+          var daysAfterChoice = getRadio('stDaysAfter');
+          var stDaysAfter;
+          if (daysAfterChoice === 'custom') {
+            stDaysAfter = parseInt(document.getElementById('stDaysAfterCustom').value, 10);
+          } else {
+            stDaysAfter = parseInt(daysAfterChoice, 10);
+          }
+          if (isNaN(stDaysAfter) || stDaysAfter < 0) return showError('Days After must be 0 or greater.');
+          payload.stDaysAfter = stDaysAfter;
+          var tod = document.getElementById('stTimeOfDay').value.trim();
+          if (!validHHMM(tod)) return showError('Time of Day must be HH:MM (e.g. 18:00).');
+          payload.stTimeOfDay = tod;
+        }
+
+        var isConditional = document.getElementById('isConditional').checked;
+        if (isConditional) {
+          var dec = document.getElementById('conditionalDecision').value;
+          if (!dec) return showError('Pick the decision step this conditional depends on.');
+          var on = getRadio('conditionalOn');
+          if (on !== 'Yes' && on !== 'No') return showError('Pick Yes or No for the conditional path.');
+          payload.conditional = true;
+          payload.conditionalStatusCol = Number(dec);
+          payload.conditionalOn = on;
+        }
+
+        var btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Adding…';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            google.script.host.close();
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = 'Add Step';
+            showError(err.message || String(err));
+          })
+          .addStepWizardSave(payload);
+      }
+
+      // ---------- Init ----------
+      updateAllDataColumnDropdowns();
+      populateDecisionDropdown();
+      wireRadioGroup('stepTypeRadios');
+      wireRadioGroup('timingRadios', refreshTimingBlock);
+      wireRadioGroup('stDaysAfterRadios', refreshDaysAfterCustom);
+      wireRadioGroup('conditionalOnRadios');
+      document.getElementById('isConditional').addEventListener('change', refreshConditional);
+      document.getElementById('useAdvanced').addEventListener('change', refreshAdvanced);
+      refreshTimingBlock();
+      refreshConditional();
+      refreshAdvanced();
+      refreshDaysAfterCustom();
+    </script>
+  </body>
+</html>

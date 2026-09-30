@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 16px 18px;
+        color: #222;
+      }
+      h2 {
+        margin: 0 0 6px 0;
+        font-size: 16px;
+        color: #1a73e8;
+      }
+      p.intro {
+        margin: 0 0 14px 0;
+        color: #555;
+        line-height: 1.4;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      .field label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .field input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      .row-times {
+        display: flex;
+        gap: 14px;
+      }
+      .row-times .field { flex: 1; }
+      .days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .days-grid label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-weight: normal;
+        font-size: 12px;
+        gap: 4px;
+        padding: 6px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .days-grid input[type="checkbox"] {
+        margin: 0;
+      }
+      .days-grid label.on {
+        background: #e8f0fe;
+        border-color: #1a73e8;
+      }
+      .holidays-note {
+        background: #fff8e1;
+        border: 1px solid #f4c952;
+        border-radius: 3px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: #4d3800;
+        margin-bottom: 14px;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      button.primary:disabled { opacity: 0.6; cursor: wait; }
+      .error {
+        color: #b00020;
+        font-size: 12px;
+        margin-top: 4px;
+        display: none;
+      }
+      .error.show { display: block; }
+    </style>
+  </head>
+  <body>
+    <h2>Setup BMP Formulas</h2>
+    <p class="intro">
+      Set your office hours and working days. Stored in row 1 of this sheet (which is then hidden).
+      You can re-run this any time to change the configuration.
+    </p>
+
+    <div class="row-times">
+      <div class="field">
+        <label for="open">Opening Time (HH:MM)</label>
+        <input type="text" id="open" value="10:00" placeholder="10:00" />
+      </div>
+      <div class="field">
+        <label for="close">Closing Time (HH:MM)</label>
+        <input type="text" id="close" value="18:00" placeholder="18:00" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Working Days</label>
+      <div class="days-grid">
+        <label data-i="0"><input type="checkbox" checked /> Mon</label>
+        <label data-i="1"><input type="checkbox" checked /> Tue</label>
+        <label data-i="2"><input type="checkbox" checked /> Wed</label>
+        <label data-i="3"><input type="checkbox" checked /> Thu</label>
+        <label data-i="4"><input type="checkbox" checked /> Fri</label>
+        <label data-i="5"><input type="checkbox" checked /> Sat</label>
+        <label data-i="6"><input type="checkbox" /> Sun</label>
+      </div>
+    </div>
+
+    <div class="holidays-note">
+      <strong>Holidays:</strong> Add fixed holidays to the <em>Holidays</em> tab (column A, DD/MM/YYYY format).
+      They are not entered here — the script reads them directly from that tab.
+    </div>
+
+    <div class="error" id="errBox"></div>
+
+    <div class="actions">
+      <button onclick="google.script.host.close()">Cancel</button>
+      <button class="primary" id="saveBtn" onclick="onSave()">Save</button>
+    </div>
+
+    <script>
+      function refreshDayLabels() {
+        var labels = document.querySelectorAll('.days-grid label');
+        for (var i = 0; i < labels.length; i++) {
+          var cb = labels[i].querySelector('input');
+          if (cb.checked) labels[i].classList.add('on');
+          else labels[i].classList.remove('on');
+        }
+      }
+      var dayLabels = document.querySelectorAll('.days-grid label');
+      for (var i = 0; i < dayLabels.length; i++) {
+        dayLabels[i].addEventListener('click', function () {
+          // The checkbox toggles natively; refresh styling on next tick
+          setTimeout(refreshDayLabels, 0);
+        });
+      }
+      refreshDayLabels();
+
+      function showError(msg) {
+        var box = document.getElementById('errBox');
+        box.textContent = msg;
+        box.classList.add('show');
+      }
+      function clearError() {
+        var box = document.getElementById('errBox');
+        box.textContent = '';
+        box.classList.remove('show');
+      }
+
+      function validHHMM(s) {
+        return /^([01]?\d|2[0-3]):[0-5]\d$/.test(String(s || '').trim());
+      }
+
+      function onSave() {
+        clearError();
+        var open = document.getElementById('open').value.trim();
+        var close = document.getElementById('close').value.trim();
+        if (!validHHMM(open)) return showError('Opening Time must be HH:MM (e.g. 10:00).');
+        if (!validHHMM(close)) return showError('Closing Time must be HH:MM (e.g. 18:00).');
+
+        var days = [];
+        for (var i = 0; i < 7; i++) {
+          var cb = document.querySelector('.days-grid label[data-i="' + i + '"] input');
+          days.push(!!cb.checked);
+        }
+        if (days.indexOf(true) === -1) return showError('Pick at least one working day.');
+
+        var btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            google.script.host.close();
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = 'Save';
+            showError(err.message || String(err));
+          })
+          .setupWizardSave({
+            open: open,
+            close: close,
+            workingDays: days
+          });
+      }
+    </script>
+  </body>
+</html>
