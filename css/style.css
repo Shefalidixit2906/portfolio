@@ -1004,9 +1004,10 @@ body.case-modal-lock { overflow: hidden; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-item:nth-child(2) { border-left: 1px solid rgba(255,255,255,0.14); }
   .stat-item:nth-child(3) { border-left: none; }
-}
 
-@media (max-width: 720px) {
+  /* Nav switches to the hamburger/dropdown menu here rather than at 720px —
+     the 7-item horizontal nav-links row no longer fits at common tablet
+     widths (e.g. 768px) above that, and was causing horizontal overflow. */
   .nav-links {
     position: absolute;
     top: 100%; left: 0; right: 0;
@@ -1019,7 +1020,10 @@ body.case-modal-lock { overflow: hidden; }
   }
   .nav-links.open { display: flex; }
   .nav-toggle { display: flex; }
+}
+
+@media (max-width: 720px) {
   section { padding: 56px 0; }
   .hero { padding-top: 40px; }
-  .hero-photo-card { position: static; margin-top: -24px; margin-left: 12px; }
+  .hero-photo-card { position: static; margin-top: -12px; margin-left: 12px; }
 }
